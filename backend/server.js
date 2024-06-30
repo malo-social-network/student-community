@@ -116,10 +116,10 @@ const initializeDefaultUser = async (pool) => {
             console.log('Utilisateur "michel" existe déjà avec l\'ID:', userId);
         } else {
             // Créer le nouvel utilisateur
-            const hashedPassword = await bcrypt.hash('password123', 10);
+            const hashedPassword = await bcrypt.hash('test', 10);
             const [userResult] = await pool.query(
                 'INSERT INTO users (username, email, password) VALUES (?, ?, ?)',
-                ['michel', 'michel@example.com', hashedPassword]
+                ['michel', 'michel@test.com', hashedPassword]
             );
             userId = userResult.insertId;
             console.log('Nouvel utilisateur "michel" créé avec l\'ID:', userId);
