@@ -38,5 +38,3 @@ yarn.lock
 public/robots.txt
 public/manifest.json
 public/logo*.png
-src/setupTests.js
-src/reportWebVitals.js
