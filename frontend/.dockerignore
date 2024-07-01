@@ -35,6 +35,4 @@ LICENSE
 yarn.lock
 
 # Fichiers spécifiques à Create React App que vous n'avez pas besoin dans l'image Docker
-public/robots.txt
-public/manifest.json
-public/logo*.png
+

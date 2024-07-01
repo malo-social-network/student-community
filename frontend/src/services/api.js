@@ -1,5 +1,11 @@
-import axios from 'axios';
+import axios from "axios";
+
 const API_URL = 'http://localhost:5000/api';
+
+const getAuthHeaders = () => {
+    const token = localStorage.getItem('token');
+    return token ? { 'Authorization': `Bearer ${token}` } : {};
+};
 
 export const register = async (username, email, password) => {
     try {
@@ -14,65 +20,95 @@ export const register = async (username, email, password) => {
 };
 
 export const login = async (email, password) => {
-    const response = await axios.post(`${API_URL}/auth/login`, { email, password });
-    return response.data;
+    try {
+        const response = await axios.post(`${API_URL}/auth/login`, { email, password });
+        return response.data;
+    } catch (error) {
+        throw error.response ? error.response.data : new Error('Erreur réseau');
+    }
 };
 
 export const getPost = async (postId) => {
-    const response = await axios.get(`${API_URL}/posts/${postId}`);
-    return response.data;
+    try {
+        const response = await axios.get(`${API_URL}/posts/${postId}`);
+        return response.data;
+    } catch (error) {
+        throw error.response ? error.response.data : new Error('Erreur réseau');
+    }
 };
 
 export const getPosts = async () => {
-    const response = await axios.get(`${API_URL}/posts`);
-    return response.data;
+    try {
+        const response = await axios.get(`${API_URL}/posts`);
+        return response.data;
+    } catch (error) {
+        throw error.response ? error.response.data : new Error('Erreur réseau');
+    }
 };
 
 export const createPost = async (title, content) => {
-    const token = localStorage.getItem('token');
-    const response = await axios.post(
-        `${API_URL}/posts`,
-        { title, content },
-        { headers: { 'Authorization': `Bearer ${token}` } }
-    );
-    return response.data;
+    try {
+        const headers = getAuthHeaders();
+        const response = await axios.post(
+            `${API_URL}/posts`,
+            { title, content },
+            { headers }
+        );
+        return response.data;
+    } catch (error) {
+        throw error.response ? error.response.data : new Error('Erreur réseau');
+    }
 };
 
 export const getUserPosts = async (userId) => {
-    const token = localStorage.getItem('token');
-    const response = await axios.get(`${API_URL}/users/${userId}/posts`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-    });
-    return response.data;
+    try {
+        const headers = getAuthHeaders();
+        const response = await axios.get(`${API_URL}/users/${userId}/posts`, { headers });
+        return response.data;
+    } catch (error) {
+        throw error.response ? error.response.data : new Error('Erreur réseau');
+    }
 };
 
 export const getProfile = async () => {
-    const token = localStorage.getItem('token');
-    const response = await axios.get(`${API_URL}/users/profile`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-    });
-    return response.data;
+    try {
+        const headers = getAuthHeaders();
+        const response = await axios.get(`${API_URL}/users/profile`, { headers });
+        return response.data;
+    } catch (error) {
+        throw error.response ? error.response.data : new Error('Erreur réseau');
+    }
 };
 
 export const updateProfile = async (userData) => {
-    const token = localStorage.getItem('token');
-    const response = await axios.put(`${API_URL}/users/profile`, userData, {
-        headers: { 'Authorization': `Bearer ${token}` }
-    });
-    return response.data;
+    try {
+        const headers = getAuthHeaders();
+        const response = await axios.put(`${API_URL}/users/profile`, userData, { headers });
+        return response.data;
+    } catch (error) {
+        throw error.response ? error.response.data : new Error('Erreur réseau');
+    }
 };
 
 export const getComments = async (postId) => {
-    const response = await axios.get(`${API_URL}/posts/${postId}/comments`);
-    return response.data;
+    try {
+        const response = await axios.get(`${API_URL}/posts/${postId}/comments`);
+        return response.data;
+    } catch (error) {
+        throw error.response ? error.response.data : new Error('Erreur réseau');
+    }
 };
 
 export const addComment = async (postId, content) => {
-    const token = localStorage.getItem('token');
-    const response = await axios.post(
-        `${API_URL}/posts/${postId}/comments`,
-        { content },
-        { headers: { 'Authorization': `Bearer ${token}` } }
-    );
-    return response.data;
+    try {
+        const headers = getAuthHeaders();
+        const response = await axios.post(
+            `${API_URL}/posts/${postId}/comments`,
+            { content },
+            { headers }
+        );
+        return response.data;
+    } catch (error) {
+        throw error.response ? error.response.data : new Error('Erreur réseau');
+    }
 };
