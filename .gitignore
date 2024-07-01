@@ -1,6 +1,6 @@
 .idea
 .gitignore
-.env
+backend/.env
 backend/node_modules
 backend/.env
 frontend/node_modules
