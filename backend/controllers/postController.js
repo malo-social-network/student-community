@@ -1,7 +1,8 @@
-const pool = require('../config/database');
+const { getPool } = require('../config/database');
 
 exports.getAllPosts = async (req, res) => {
     try {
+        const pool = getPool();
         const [rows] = await pool.query('SELECT * FROM posts ORDER BY created_at DESC');
         res.json(rows);
     } catch (error) {
@@ -12,6 +13,7 @@ exports.getAllPosts = async (req, res) => {
 
 exports.getPostById = async (req, res) => {
     try {
+        const pool = getPool();
         const [rows] = await pool.query(
             `SELECT posts.*, users.username
              FROM posts
@@ -36,6 +38,7 @@ exports.getPostById = async (req, res) => {
 
 exports.createPost = async (req, res) => {
     try {
+        const pool = getPool();
         const {title, content} = req.body;
         const [result] = await pool.query(
             'INSERT INTO posts (user_id, title, content) VALUES (?, ?, ?)',
@@ -56,6 +59,7 @@ exports.createPost = async (req, res) => {
 
 exports.getPostComments = async (req, res) => {
     try {
+        const pool = getPool();
         const [rows] = await pool.query(
             `SELECT comments.*, users.username 
              FROM comments 
@@ -73,6 +77,7 @@ exports.getPostComments = async (req, res) => {
 
 exports.addComment = async (req, res) => {
     try {
+        const pool = getPool();
         const { content } = req.body;
         const [result] = await pool.query(
             'INSERT INTO comments (post_id, user_id, content) VALUES (?, ?, ?)',

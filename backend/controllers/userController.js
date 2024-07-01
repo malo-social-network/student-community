@@ -1,7 +1,8 @@
-const pool = require('../config/database');
+const { getPool } = require('../config/database');
 
 exports.getProfile = async (req, res) => {
     try {
+        const pool = getPool();
         const [rows] = await pool.query('SELECT id, username, email FROM users WHERE id = ?', [req.user.id]);
         if (rows.length === 0) {
             return res.status(404).json({error: 'Utilisateur non trouvé'});
@@ -15,6 +16,7 @@ exports.getProfile = async (req, res) => {
 
 exports.updateProfile = async (req, res) => {
     try {
+        const pool = getPool();
         const {username, email} = req.body;
         await pool.query('UPDATE users SET username = ?, email = ? WHERE id = ?', [username, email, req.user.id]);
         res.json({message: 'Profil mis à jour avec succès'});
@@ -26,6 +28,7 @@ exports.updateProfile = async (req, res) => {
 
 exports.getUserPosts = async (req, res) => {
     try {
+        const pool = getPool();
         const [rows] = await pool.query('SELECT * FROM posts WHERE user_id = ? ORDER BY created_at DESC', [req.params.userId]);
         res.json(rows);
     } catch (error) {

@@ -1,8 +1,5 @@
-console.log('Starting server...');
-require('dotenv').config()
-console.log('Dotenv configured');
+require('dotenv').config();
 const express = require('express');
-console.log('Express imported');
 const cors = require('cors');
 const helmet = require('helmet');
 const swaggerUi = require('swagger-ui-express');
@@ -22,10 +19,14 @@ app.use('/api', routes);
 
 const startServer = async () => {
     try {
+        console.log('Starting server...');
         console.log('Creating database...');
         await createDatabase();
         console.log('Database created');
+
+        console.log('Initializing default user...');
         await initializeDefaultUser();
+        console.log('Default user initialized');
 
         const PORT = process.env.PORT || 5000;
         app.listen(PORT, () => {

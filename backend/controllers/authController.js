@@ -1,10 +1,11 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const pool = require('../config/database');
+const { getPool } = require('../config/database');
 const logger = require('../config/logger');
 
 exports.register = async (req, res) => {
     try {
+        const pool = getPool();
         const {username, email, password} = req.body;
 
         if (!username || !email || !password) {
@@ -36,6 +37,7 @@ exports.register = async (req, res) => {
 
 exports.login = async (req, res) => {
     try {
+        const pool = getPool();
         const {email, password} = req.body;
         const [rows] = await pool.query('SELECT * FROM users WHERE email = ?', [email]);
         if (rows.length === 0) {

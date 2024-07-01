@@ -18,14 +18,6 @@ export const login = async (email, password) => {
     return response.data;
 };
 
-export const getProfile = async () => {
-    const token = localStorage.getItem('token');
-    const response = await axios.get(`${API_URL}/profile`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-    });
-    return response.data;
-};
-
 export const getPost = async (postId) => {
     const response = await axios.get(`${API_URL}/posts/${postId}`);
     return response.data;
@@ -54,9 +46,17 @@ export const getUserPosts = async (userId) => {
     return response.data;
 };
 
+export const getProfile = async () => {
+    const token = localStorage.getItem('token');
+    const response = await axios.get(`${API_URL}/users/profile`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+    });
+    return response.data;
+};
+
 export const updateProfile = async (userData) => {
     const token = localStorage.getItem('token');
-    const response = await axios.put(`${API_URL}/profile`, userData, {
+    const response = await axios.put(`${API_URL}/users/profile`, userData, {
         headers: { 'Authorization': `Bearer ${token}` }
     });
     return response.data;
