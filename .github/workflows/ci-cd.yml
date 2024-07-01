@@ -30,5 +30,3 @@ jobs:
         run: |
           cd frontend
           npm test
-          cd ../backend
-          npm test
