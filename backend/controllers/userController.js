@@ -18,10 +18,13 @@ exports.updateProfile = async (req, res) => {
     try {
         const pool = getPool();
         const {username, email} = req.body;
+        console.log('Updating profile with:', { username, email, userId: req.user.id });
         await pool.query('UPDATE users SET username = ?, email = ? WHERE id = ?', [username, email, req.user.id]);
-        res.json({message: 'Profil mis à jour avec succès'});
+        const [updatedUser] = await pool.query('SELECT id, username, email FROM users WHERE id = ?', [req.user.id]);
+        console.log('Updated user data:', updatedUser[0]);
+        res.json(updatedUser[0]);
     } catch (error) {
-        console.error(error);
+        console.error('Error updating profile:', error);
         res.status(500).json({error: 'Erreur lors de la mise à jour du profil'});
     }
 };
