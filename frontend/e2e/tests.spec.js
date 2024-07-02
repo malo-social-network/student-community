@@ -1,6 +1,6 @@
 const { test, expect } = require('@playwright/test');
 
-const BASE_URL = 'http://localhost';
+const BASE_URL = 'http://localhost' | 'http://localhost:80';
 
 async function logPageState(page, message) {
     console.log(`\n--- ${message} ---`);
