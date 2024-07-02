@@ -140,7 +140,7 @@ describe('Login Component', () => {
 
         const duration = end - start;
         console.log(`Email field update took ${duration} ms`);
-        expect(duration).toBeLessThan(100); // Ajustez le seuil selon les besoins
+        expect(duration).toBeLessThan(100);
     });
 
     // Test de performance de la mise à jour du champ mot de passe
