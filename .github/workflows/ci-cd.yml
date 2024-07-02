@@ -59,6 +59,19 @@ jobs:
           cd frontend
           npm run build
 
+      - name: Comment PR
+        uses: actions/github-script@v6
+        if: github.event_name == 'pull_request'
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.name,
+              body: 'Tous les tests ont passé avec succès! Prêt pour la revue.'
+            })
+
   deploy:
     needs: build-and-test
     runs-on: ubuntu-latest
@@ -77,3 +90,12 @@ jobs:
         run: |
           docker-compose build
           docker-compose push
+
+      - name: Build and push Docker images
+        run: |
+          VERSION=${GITHUB_SHA::8}
+          docker-compose build
+          docker tag student-community_backend:latest ${{ secrets.DOCKERHUB_USERNAME }}/student-community_backend:$VERSION
+          docker tag student-community_frontend:latest ${{ secrets.DOCKERHUB_USERNAME }}/student-community_frontend:$VERSION
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/student-community_backend:$VERSION
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/student-community_frontend:$VERSION
