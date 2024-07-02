@@ -57,7 +57,7 @@ jobs:
       - name: Run Frontend EndToEnd Tests
         run: |
           cd frontend
-          npm test:e2e
+          npm run test:e2e
 
       - name: Build Frontend
         run: |
