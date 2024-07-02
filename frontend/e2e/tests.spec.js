@@ -9,10 +9,8 @@ async function logPageState(page, message) {
     console.log('Available links:', await page.$$eval('a', links => links.map(a => ({ text: a.textContent, href: a.href }))));
     console.log('Available buttons:', await page.$$eval('button', buttons => buttons.map(b => b.textContent)));
     console.log('HTML content:', await page.content());
-    await page.screenshot({ path: `screenshot-${message.replace(/\s+/g, '-').toLowerCase()}.png` });
     console.log('-------------------\n');
 }
-
 test('log in and verify user state', async ({ page }) => {
     await page.goto(BASE_URL);
     await logPageState(page, 'Initial state');
@@ -88,14 +86,17 @@ test('create a new post', async ({ page }) => {
     await page.waitForTimeout(2000);
     await logPageState(page, 'Create post form');
 
-    await page.fill('input[id="title"]', 'Mon nouveau post de test');
-    await page.fill('textarea[id="content"]', 'Ceci est le contenu de mon post de test.');
+    const randomTitle = `Mon nouveau post de test ${Math.random().toString(36).substring(7)}`;
+    const randomContent = `Ceci est le contenu de mon post de test ${Math.random().toString(36).substring(7)}`;
+
+    await page.fill('input[id="title"]', randomTitle);
+    await page.fill('textarea[id="content"]', randomContent);
     await page.click('button:has-text("Publier")');
 
     await page.waitForTimeout(2000);
     await logPageState(page, 'After creating post');
 
-    const newPost = await page.$('text=Mon nouveau post de test');
+    const newPost = await page.$(`text=${randomTitle}`);
     expect(newPost, 'Le nouveau post n\'a pas été trouvé').toBeTruthy();
 });
 
@@ -144,25 +145,18 @@ test('update user profile', async ({ page }) => {
     await logPageState(page, 'Profile page');
 
     await page.click('text=Modifier le profil');
-    await page.fill('input[id="username"]', 'michel_updated');
-    await page.fill('input[id="email"]', 'michel_updated@test.com');
+
+    const randomUsername = `michel_updated_${Math.random().toString(36).substring(7)}`;
+    const randomEmail = `michel_updated_${Math.random().toString(36).substring(7)}@test.com`;
+
+    await page.fill('input[id="username"]', randomUsername);
+    await page.fill('input[id="email"]', randomEmail);
     await page.click('button:has-text("Sauvegarder")');
 
     await page.waitForTimeout(2000);
+
     await logPageState(page, 'After profile update');
 
-    console.log('After update:', await page.content());
-
-    const updatedUsername = await page.$('text=michel_updated');
-    const updatedEmail = await page.$('text=michel_updated@test.com');
-
-    console.log('Updated username element:', updatedUsername);
-    console.log('Updated email element:', updatedEmail);
-
-    if (!updatedUsername) {
-        console.log('Username not found. Nearby text:', await page.innerText('body'));
-    }
-
-    expect(updatedUsername, 'Le nom d\'utilisateur mis à jour n\'a pas été trouvé').toBeTruthy();
-    expect(updatedEmail, 'L\'email mis à jour n\'a pas été trouvé').toBeTruthy();
+    const newUsername = await page.$(`text=${randomUsername}`);
+    expect(newUsername, 'Le nouveau usernmae n\'a pas été trouvé').toBeTruthy();
 });

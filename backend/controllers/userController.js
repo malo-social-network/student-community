@@ -39,3 +39,25 @@ exports.getUserPosts = async (req, res) => {
         res.status(500).json({error: 'Erreur lors de la récupération des posts de l\'utilisateur'});
     }
 };
+
+exports.deleteUser = async (req, res) => {
+    try {
+        const pool = getPool();
+        const { email } = req.params;
+
+        await pool.query('DELETE FROM comments WHERE user_id = (SELECT id FROM users WHERE email = ?)', [email]);
+
+        await pool.query('DELETE FROM posts WHERE user_id = (SELECT id FROM users WHERE email = ?)', [email]);
+
+        const [result] = await pool.query('DELETE FROM users WHERE email = ?', [email]);
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ error: 'Utilisateur non trouvé' });
+        }
+
+        res.json({ message: 'Utilisateur supprimé avec succès' });
+    } catch (error) {
+        console.error('Erreur lors de la suppression de l\'utilisateur:', error);
+        res.status(500).json({ error: 'Erreur lors de la suppression de l\'utilisateur' });
+    }
+};

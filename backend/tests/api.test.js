@@ -1,5 +1,5 @@
 const request = require('supertest');
-const app = require('../server'); // Assurez-vous que ce chemin est correct
+const app = require('../server');
 const { getPool } = require('../config/database');
 
 let authToken;
@@ -7,7 +7,9 @@ let userId;
 let postId;
 
 beforeAll(async () => {
-    // Enregistrer un utilisateur de test
+    // Nous n'avons plus besoin de démarrer le serveur manuellement
+    // car il est déjà configuré dans server.js
+
     const res = await request(app)
         .post('/api/auth/register')
         .send({
@@ -20,7 +22,8 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-    // Nettoyer la base de données après les tests
+    // Nous n'avons plus besoin de fermer le serveur manuellement
+
     const pool = getPool();
     await pool.query('DELETE FROM comments WHERE user_id = ?', [userId]);
     await pool.query('DELETE FROM posts WHERE user_id = ?', [userId]);
@@ -46,7 +49,8 @@ describe('User CRUD Operations', () => {
                 email: 'updated@example.com'
             });
         expect(res.statusCode).toBe(200);
-        expect(res.body).toHaveProperty('message', 'Profil mis à jour avec succès');
+        expect(res.body).toHaveProperty('username', 'updateduser');
+        expect(res.body).toHaveProperty('email', 'updated@example.com');
     });
 });
 
