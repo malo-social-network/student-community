@@ -99,7 +99,7 @@ describe('Login Component', () => {
 
         const duration = end - start;
         console.log(`Login function took ${duration} ms`);
-        expect(duration).toBeLessThan(1000); // Ajustez le seuil selon les besoins
+        expect(duration).toBeLessThan(1000);
     });
 
     // Test de performance de la soumission du formulaire
