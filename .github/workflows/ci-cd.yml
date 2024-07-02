@@ -36,7 +36,7 @@ jobs:
       - name: Run Backend Tests
         run: |
           cd backend
-          npm test
+          npm run test
         env:
           DB_HOST: 127.0.0.1
           DB_USER: root

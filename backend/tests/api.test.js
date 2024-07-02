@@ -1,14 +1,13 @@
 const request = require('supertest');
 const app = require('../server');
-const { getPool } = require('../config/database');
+const { getPool, initializeDatabase} = require('../config/database');
 
 let authToken;
 let userId;
 let postId;
 
 beforeAll(async () => {
-    // Nous n'avons plus besoin de démarrer le serveur manuellement
-    // car il est déjà configuré dans server.js
+    await initializeDatabase();
 
     const res = await request(app)
         .post('/api/auth/register')
