@@ -67,10 +67,9 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Check DockerHub credentials
+      - name: Login to DockerHub
         run: |
-          echo "DockerHub username is set: ${{ secrets.DOCKERHUB_USERNAME != '' }}"
-          echo "DockerHub token is set: ${{ secrets.DOCKERHUB_TOKEN != '' }}"
+          echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
 
       - name: Login to DockerHub
         uses: docker/login-action@v2
