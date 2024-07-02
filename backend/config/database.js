@@ -1,6 +1,6 @@
 const mysql = require('mysql2/promise');
 const bcrypt = require('bcrypt');
-const faker = require('faker');
+import { faker } from '@faker-js/faker';
 
 const dbConfig = {
     host: process.env.DB_HOST || 'localhost',
