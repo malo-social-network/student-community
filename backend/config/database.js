@@ -30,40 +30,39 @@ const createDatabase = async () => {
             await connection.query(`CREATE DATABASE IF NOT EXISTS ${process.env.DB_NAME}`);
             await connection.query(`USE ${process.env.DB_NAME}`);
 
-
             await connection.query(`
                 CREATE TABLE IF NOT EXISTS users (
-                    id INT AUTO_INCREMENT PRIMARY KEY,
-                    username VARCHAR(255) NOT NULL UNIQUE,
+                                                     id INT AUTO_INCREMENT PRIMARY KEY,
+                                                     username VARCHAR(255) NOT NULL UNIQUE,
                     email VARCHAR(255) NOT NULL UNIQUE,
                     password VARCHAR(255) NOT NULL,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                )
+                    )
             `);
 
             await connection.query(`
-            CREATE TABLE IF NOT EXISTS posts (
-                                                 id INT AUTO_INCREMENT PRIMARY KEY,
-                                                 user_id INT NOT NULL,
-                                                 title VARCHAR(255) NOT NULL,
-                content TEXT NOT NULL,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (user_id) REFERENCES users(id),
-                UNIQUE KEY unique_user_post (user_id, title)
-                )
-        `);
+                CREATE TABLE IF NOT EXISTS posts (
+                                                     id INT AUTO_INCREMENT PRIMARY KEY,
+                                                     user_id INT NOT NULL,
+                                                     title VARCHAR(255) NOT NULL,
+                    content TEXT NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (user_id) REFERENCES users(id),
+                    UNIQUE KEY unique_user_post (user_id, title)
+                    )
+            `);
 
             await connection.query(`
-  CREATE TABLE IF NOT EXISTS comments (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    post_id INT NOT NULL,
-    user_id INT NOT NULL,
-    content TEXT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (post_id) REFERENCES posts(id),
-    FOREIGN KEY (user_id) REFERENCES users(id)
-  )
-`);
+                CREATE TABLE IF NOT EXISTS comments (
+                                                        id INT AUTO_INCREMENT PRIMARY KEY,
+                                                        post_id INT NOT NULL,
+                                                        user_id INT NOT NULL,
+                                                        content TEXT NOT NULL,
+                                                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                                                        FOREIGN KEY (post_id) REFERENCES posts(id),
+                    FOREIGN KEY (user_id) REFERENCES users(id)
+                    )
+            `);
 
             console.log('Base de données et tables créées avec succès');
             await connection.end();
@@ -88,8 +87,8 @@ const initializeDefaultUser = async () => {
         if (existingUsers.length === 0) {
             const hashedPassword = await bcrypt.hash('test', 10);
             const [result] = await pool.query(
-                'INSERT INTO users (username, email, password) VALUES (?, ?, ?)',
-                ['michel', 'michel@test.com', hashedPassword]
+              'INSERT INTO users (username, email, password) VALUES (?, ?, ?)',
+              ['michel', 'michel@test.com', hashedPassword]
             );
             userId = result.insertId;
             console.log('Utilisateur "michel" créé avec succès');
@@ -102,8 +101,8 @@ const initializeDefaultUser = async () => {
 
         if (existingPosts.length === 0) {
             await pool.query(
-                'INSERT INTO posts (user_id, title, content) VALUES (?, ?, ?)',
-                [userId, 'Mon premier post', 'Bonjour, ceci est mon premier post sur la plateforme !']
+              'INSERT INTO posts (user_id, title, content) VALUES (?, ?, ?)',
+              [userId, 'Mon premier post', 'Bonjour, ceci est mon premier post sur la plateforme !']
             );
             console.log('Post créé pour Michel');
         } else {

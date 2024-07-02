@@ -1,18 +1,14 @@
 const express = require('express');
 const router = express.Router();
 const { authenticateToken } = require('../middleware/auth');
-const {
-    getAllPosts,
-    getPostById,
-    createPost,
-    getPostComments,
-    addComment
-} = require('../controllers/postController');
+const postController = require('../controllers/postController');
 
-router.get('/', getAllPosts);
-router.get('/:id', getPostById);
-router.post('/', authenticateToken, createPost);
-router.get('/:postId/comments', getPostComments);
-router.post('/:postId/comments', authenticateToken, addComment);
+router.post('/', authenticateToken, postController.createPost);
+router.get('/', postController.getAllPosts);
+router.get('/:id', postController.getPost);
+router.put('/:id', authenticateToken, postController.updatePost);
+router.delete('/:id', authenticateToken, postController.deletePost);
+router.get('/:postId/comments', postController.getPostComments);
+router.post('/:postId/comments', authenticateToken, postController.addComment);
 
 module.exports = router;
