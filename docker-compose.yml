@@ -9,41 +9,30 @@ services:
       - "80:80"
     depends_on:
       - backend
-    networks:
-      - app-network
 
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
     ports:
-      - "8000:8000"
+      - "5000:5000"
     environment:
       DB_HOST: database
       DB_USER: root
       DB_PASSWORD: root_password
       DB_NAME: student_community
-      JWT_SECRET: your_jwt_secret
+      JWT_SECRET: votre_secret_jwt
     depends_on:
       - database
-    networks:
-      - app-network
 
   database:
     image: mysql:8.0
     command: --default-authentication-plugin=mysql_native_password
-    restart: always
     environment:
       MYSQL_ROOT_PASSWORD: root_password
       MYSQL_DATABASE: student_community
     volumes:
       - db-data:/var/lib/mysql
-    networks:
-      - app-network
-
-networks:
-  app-network:
-    driver: bridge
 
 volumes:
   db-data:

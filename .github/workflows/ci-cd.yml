@@ -36,7 +36,7 @@ jobs:
       - name: Run Backend Tests
         run: |
           cd backend
-          npm test
+          npm run test
         env:
           DB_HOST: 127.0.0.1
           DB_USER: root
@@ -49,53 +49,22 @@ jobs:
           cd frontend
           npm ci
 
-      - name: Run Frontend Tests
+      - name: Install Playwright Browsers
+        run: |
+          cd frontend
+          npx playwright install
+
+      - name: Run Frontend Unitaire & Performance Tests
         run: |
           cd frontend
           npm test
+
+      - name: Run Frontend EndToEnd Tests
+        run: |
+          cd frontend
+          npm run test:e2e
 
       - name: Build Frontend
         run: |
           cd frontend
           npm run build
-
-      - name: Comment PR
-        uses: actions/github-script@v6
-        if: github.event_name == 'pull_request'
-        with:
-          github-token: ${{secrets.GITHUB_TOKEN}}
-          script: |
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.name,
-              body: 'Tous les tests ont passé avec succès! Prêt pour la revue.'
-            })
-
-  deploy-docker-image:
-    needs: build-and-test
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-
-    steps:
-      - uses: actions/checkout@v2
-
-      - name: Login to DockerHub
-        uses: docker/login-action@v2
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - name: Build and push Docker images
-        run: |
-          docker-compose build
-          docker-compose push
-
-      - name: Build and push Docker images
-        run: |
-          VERSION=${GITHUB_SHA::8}
-          docker-compose build
-          docker tag student-community_backend:latest ${{ secrets.DOCKERHUB_USERNAME }}/student-community_backend:$VERSION
-          docker tag student-community_frontend:latest ${{ secrets.DOCKERHUB_USERNAME }}/student-community_frontend:$VERSION
-          docker push ${{ secrets.DOCKERHUB_USERNAME }}/student-community_backend:$VERSION
-          docker push ${{ secrets.DOCKERHUB_USERNAME }}/student-community_frontend:$VERSION

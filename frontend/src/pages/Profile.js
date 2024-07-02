@@ -42,8 +42,8 @@ const Profile = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            await updateProfile(editedUser);
-            setUser(editedUser);
+            const updatedUserData = await updateProfile(editedUser);
+            setUser(updatedUserData);
             setIsEditing(false);
             setError('');
         } catch (err) {

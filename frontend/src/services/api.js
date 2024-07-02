@@ -83,9 +83,12 @@ export const getProfile = async () => {
 export const updateProfile = async (userData) => {
     try {
         const headers = getAuthHeaders();
+        console.log('Sending update request with data:', userData);
         const response = await axios.put(`${API_URL}/users/profile`, userData, { headers });
+        console.log('Update profile response:', response.data);
         return response.data;
     } catch (error) {
+        console.error('Erreur lors de la mise à jour du profil:', error.response ? error.response.data : error.message);
         throw error.response ? error.response.data : new Error('Erreur réseau');
     }
 };
