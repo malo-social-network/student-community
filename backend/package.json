@@ -1,6 +1,6 @@
 {
   "name": "student-community-back",
-  "version": "1.0.0",
+  "version": "0.5.4",
   "main": "index.js",
   "scripts": {
     "start": "node server.js",
