@@ -12,10 +12,15 @@ const app = express();
 
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 app.use(helmet());
-app.use(cors());
 app.use(express.json());
 
 app.use('/api', routes);
+
+app.use(cors({
+    origin: 'http://localhost:3000', // Autorisez votre frontend local
+    methods: 'GET,POST,PUT,DELETE',
+    credentials: true
+}));
 
 const startServer = async () => {
     try {
