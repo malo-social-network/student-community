@@ -6,10 +6,10 @@ const logger = require('../config/logger');
 exports.register = async (req, res) => {
     try {
         const pool = getPool();
-        const {username, email, password} = req.body;
+        const { username, email, password } = req.body;
 
         if (!username || !email || !password) {
-            return res.status(400).json({error: 'Tous les champs sont requis'});
+            return res.status(400).json({ error: 'Tous les champs sont requis' });
         }
 
         const hashedPassword = await bcrypt.hash(password, 10);
@@ -18,7 +18,12 @@ exports.register = async (req, res) => {
             [username, email, hashedPassword]
         );
 
-        const token = jwt.sign({id: result.insertId, username}, process.env.JWT_SECRET);
+        const secret = process.env.JWT_SECRET;
+        if (!secret) {
+            throw new Error('JWT secret is not defined');
+        }
+
+        const token = jwt.sign({ id: result.insertId, username }, secret);
 
         res.status(201).json({
             message: "Inscription réussie",
@@ -29,31 +34,37 @@ exports.register = async (req, res) => {
     } catch (error) {
         console.error('Erreur détaillée:', error);
         if (error.code === 'ER_DUP_ENTRY') {
-            return res.status(400).json({error: 'Cet email est déjà utilisé'});
+            return res.status(400).json({ error: 'Cet email est déjà utilisé' });
         }
-        res.status(500).json({error: 'Erreur lors de l\'inscription: ' + error.message});
+        res.status(500).json({ error: 'Erreur lors de l\'inscription: ' + error.message });
     }
 };
 
 exports.login = async (req, res) => {
     try {
         const pool = getPool();
-        const {email, password} = req.body;
+        const { email, password } = req.body;
         const [rows] = await pool.query('SELECT * FROM users WHERE email = ?', [email]);
         if (rows.length === 0) {
-            return res.status(400).json({error: 'Utilisateur non trouvé'});
+            return res.status(400).json({ error: 'Utilisateur non trouvé' });
         }
         const user = rows[0];
         const validPassword = await bcrypt.compare(password, user.password);
         if (!validPassword) {
-            return res.status(400).json({error: 'Mot de passe incorrect'});
+            return res.status(400).json({ error: 'Mot de passe incorrect' });
         }
-        const token = jwt.sign({id: user.id, username: user.username}, process.env.JWT_SECRET);
-        res.json({token, userId: user.id, username: user.username});
+
+        const secret = process.env.JWT_SECRET;
+        if (!secret) {
+            throw new Error('JWT secret is not defined');
+        }
+
+        const token = jwt.sign({ id: user.id, username: user.username }, secret);
+        res.json({ token, userId: user.id, username: user.username });
         logger.info(`User logged in: ${user.email}`);
     } catch (error) {
         console.error(error);
-        res.status(500).json({error: 'Erreur lors de la connexion'});
+        res.status(500).json({ error: 'Erreur lors de la connexion' });
         logger.info(`Login error: ${error.message}`);
     }
 };

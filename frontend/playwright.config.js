@@ -1,10 +1,11 @@
 // @ts-check
 const { devices } = require('@playwright/test');
+require('dotenv').config();
 
 /** @type {import('@playwright/test').PlaywrightTestConfig} */
 const config = {
     testDir: './e2e',
-    timeout: 30 * 1000,
+    timeout: 30000,
     expect: {
         timeout: 5000
     },
@@ -16,6 +17,7 @@ const config = {
     use: {
         actionTimeout: 0,
         trace: 'on-first-retry',
+        baseURL: process.env.BASE_URL || 'http://localhost:3000',
     },
     projects: [
         {

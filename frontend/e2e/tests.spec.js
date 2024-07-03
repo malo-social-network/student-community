@@ -1,32 +1,51 @@
 const { test, expect } = require('@playwright/test');
 const { faker } = require('@faker-js/faker');
 
-test.setTimeout(60000);
-
 const BASE_URL = process.env.BASE_URL || 'http://localhost:3000';
 
 const testUser = {
-    username: 'michel',
-    email: 'michel@test.com',
-    password: 'test'
+    username: faker.internet.userName(),
+    email: faker.internet.email(),
+    password: faker.internet.password()
 };
 
 async function logPageState(page, message) {
     console.log(`\n--- ${message} ---`);
     console.log('Current URL:', page.url());
     console.log('Page title:', await page.title());
-    console.log('Available links:', await page.$$eval('a', links => links.map(a => ({ text: a.textContent, href: a.href }))));
-    console.log('Available buttons:', await page.$$eval('button', buttons => buttons.map(b => b.textContent)));
+    console.log('Available links:', await page.$$eval('a', links => links.map(a => ({ text: a.textContent, href: a.href })), { timeout: 10000 }));
+    console.log('Available buttons:', await page.$$eval('button', buttons => buttons.map(b => b.textContent), { timeout: 10000 }));
     console.log('HTML content:', await page.content());
     console.log('-------------------\n');
 }
 
-async function login(page) {
-    await page.goto(`${BASE_URL}/login`);
+async function checkOrCreateUser(page) {
+    await page.goto(`${BASE_URL}/login`, { timeout: 10000 });
     await page.fill('input[placeholder="Email"]', testUser.email);
     await page.fill('input[placeholder="Mot de passe"]', testUser.password);
     await page.click('button:has-text("Se connecter")');
+
     await page.waitForTimeout(2000);
+
+    const loginError = await page.$('text=Une erreur est survenue lors de la connexion');
+    if (loginError) {
+        await page.goto(`${BASE_URL}/register`, { timeout: 10000 });
+        await page.fill('input[placeholder="Nom d\'utilisateur"]', testUser.username);
+        await page.fill('input[placeholder="Email"]', testUser.email);
+        await page.fill('input[placeholder="Mot de passe"]', testUser.password);
+        await page.click('button:has-text("S\'inscrire")');
+
+        await page.waitForTimeout(2000);
+    }
+}
+
+async function login(page) {
+    await checkOrCreateUser(page);
+    await page.goto(`${BASE_URL}/login`, { timeout: 10000 });
+    await page.fill('input[placeholder="Email"]', testUser.email);
+    await page.fill('input[placeholder="Mot de passe"]', testUser.password);
+    await page.click('button:has-text("Se connecter")');
+    await page.waitForTimeout(5000); // Augmente le délai d'attente après la connexion
 }
 
 test('log in and verify user state', async ({ page }) => {
@@ -101,8 +120,8 @@ test('update user profile and revert changes', async ({ page }) => {
 
     await page.click('text=Modifier le profil');
 
-    const newUsername = `michel_updated_${faker.random.alphaNumeric(5)}`;
-    const newEmail = `michel_updated_${faker.random.alphaNumeric(5)}@test.com`;
+    const newUsername = `updated_${faker.internet.userName()}`;
+    const newEmail = faker.internet.email();
 
     await page.fill('input[id="username"]', newUsername);
     await page.fill('input[id="email"]', newEmail);
