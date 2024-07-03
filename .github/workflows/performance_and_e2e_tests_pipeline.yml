@@ -59,10 +59,20 @@ jobs:
           nohup npm start > frontend.log 2>&1 &
           echo $! > ../frontend.pid
 
+#      - name: Download wait-for-it script
+#        run: |
+#          curl -o wait-for-it.sh https://raw.githubusercontent.com/vishnubob/wait-for-it/master/wait-for-it.sh
+#          chmod +x wait-for-it.sh
+#
+#      - name: Wait for services to be ready
+#        run: |
+#          ./wait-for-it.sh localhost:5000 -t 60
+#          ./wait-for-it.sh localhost:3000 -t 60
+
       - name: Wait for services to be ready
         run: |
-          ./wait-for-it.sh localhost:5000 -t 60
-          ./wait-for-it.sh localhost:3000 -t 60
+          timeout 60s bash -c 'while ! nc -z localhost 5000; do sleep 1; done'
+          timeout 60s bash -c 'while ! nc -z localhost 3000; do sleep 1; done'
 
       - name: Run Backend Unit Tests
         run: |
