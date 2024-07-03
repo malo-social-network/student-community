@@ -37,7 +37,7 @@ jobs:
       - name: Set up Database Schema
         run: |
           echo "Initializing database schema..."
-          sudo mysql -u root -root_password < backend/init_db.sql
+          mysql -h 127.0.0.1 -u root -proot_password student_community < backend/init_db.sql
           echo "Database schema initialized"
 
       - name: Check MySQL Status
