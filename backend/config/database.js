@@ -1,6 +1,6 @@
 const mysql = require('mysql2/promise');
 const bcrypt = require('bcrypt');
-const faker = require('faker');
+const { faker } = require('@faker-js/faker');
 
 const dbConfig = {
     host: process.env.DB_HOST || 'localhost',
@@ -13,117 +13,158 @@ let pool = null;
 
 const getPool = () => {
     if (!pool) {
+        console.log('Creating new connection pool');
         pool = mysql.createPool(dbConfig);
     }
     return pool;
 };
 
+const checkDatabaseExists = async () => {
+    const tempPool = mysql.createPool({
+        ...dbConfig,
+        database: null
+    });
+    try {
+        const [rows] = await tempPool.query(`SHOW DATABASES LIKE '${dbConfig.database}'`);
+        return rows.length > 0;
+    } finally {
+        await tempPool.end();
+    }
+};
+
+const createDatabase = async () => {
+    const tempPool = mysql.createPool({
+        ...dbConfig,
+        database: null
+    });
+    try {
+        await tempPool.query(`CREATE DATABASE IF NOT EXISTS ${dbConfig.database}`);
+        console.log(`Database ${dbConfig.database} created or already exists`);
+    } finally {
+        await tempPool.end();
+    }
+};
+
+const checkTableExists = async (tableName) => {
+    const pool = getPool();
+    const [rows] = await pool.query(`
+        SELECT COUNT(*) as count 
+        FROM information_schema.tables 
+        WHERE table_schema = ? AND table_name = ?
+    `, [dbConfig.database, tableName]);
+    return rows[0].count > 0;
+};
+
 const createTables = async () => {
     const pool = getPool();
+    console.log('Checking and creating tables if necessary...');
 
-    await pool.query(`
-        CREATE TABLE IF NOT EXISTS users (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            username VARCHAR(255) NOT NULL UNIQUE,
-            email VARCHAR(255) NOT NULL UNIQUE,
-            password VARCHAR(255) NOT NULL,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-    `);
+    const tables = {
+        users: `
+            CREATE TABLE IF NOT EXISTS users (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                username VARCHAR(255) NOT NULL UNIQUE,
+                email VARCHAR(255) NOT NULL UNIQUE,
+                password VARCHAR(255) NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        `,
+        posts: `
+            CREATE TABLE IF NOT EXISTS posts (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                user_id INT NOT NULL,
+                title VARCHAR(255) NOT NULL,
+                content TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users(id),
+                UNIQUE KEY unique_user_post (user_id, title)
+            )
+        `,
+        comments: `
+            CREATE TABLE IF NOT EXISTS comments (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                post_id INT NOT NULL,
+                user_id INT NOT NULL,
+                content TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (post_id) REFERENCES posts(id),
+                FOREIGN KEY (user_id) REFERENCES users(id)
+            )
+        `
+    };
 
-    await pool.query(`
-        CREATE TABLE IF NOT EXISTS posts (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            user_id INT NOT NULL,
-            title VARCHAR(255) NOT NULL,
-            content TEXT NOT NULL,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (user_id) REFERENCES users(id),
-            UNIQUE KEY unique_user_post (user_id, title)
-        )
-    `);
-
-    await pool.query(`
-        CREATE TABLE IF NOT EXISTS comments (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            post_id INT NOT NULL,
-            user_id INT NOT NULL,
-            content TEXT NOT NULL,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (post_id) REFERENCES posts(id),
-            FOREIGN KEY (user_id) REFERENCES users(id)
-        )
-    `);
+    for (const [tableName, query] of Object.entries(tables)) {
+        const exists = await checkTableExists(tableName);
+        if (!exists) {
+            await pool.query(query);
+            console.log(`Table ${tableName} created`);
+        } else {
+            console.log(`Table ${tableName} already exists`);
+        }
+    }
 };
 
 const createFakeData = async () => {
     const pool = getPool();
+    console.log('Creating fake data...');
 
-    // Check if user 'michel' already exists
-    const [existingUsers] = await pool.query('SELECT * FROM users WHERE username = ?', ['michel']);
-    if (existingUsers.length === 0) {
-        const michelPassword = await bcrypt.hash('test', 10);
-        await pool.query(
-            'INSERT INTO users (username, email, password) VALUES (?, ?, ?)',
-            ['michel', 'michel@test.com', michelPassword]
-        );
-        console.log('Utilisateur Michel ajouté avec succès');
-    } else {
-        console.log('Utilisateur Michel existe déjà');
+    // Check if users table is empty
+    const [userCount] = await pool.query('SELECT COUNT(*) as count FROM users');
+    if (userCount[0].count > 0) {
+        console.log('Fake data already exists, skipping creation');
+        return;
     }
 
-    for (let i = 0; i < 1; i++) {
+    // Create fake users
+    const users = [];
+    for (let i = 0; i < 10; i++) {
         const username = faker.internet.userName();
         const email = faker.internet.email();
-        const password = await bcrypt.hash('password', 10);
-
-        await pool.query(
+        const password = await bcrypt.hash('password123', 10);
+        const [result] = await pool.query(
             'INSERT INTO users (username, email, password) VALUES (?, ?, ?)',
             [username, email, password]
         );
+        users.push({ id: result.insertId, username });
     }
 
-    const [users] = await pool.query('SELECT * FROM users');
-
+    // Create fake posts
     for (const user of users) {
-        const numPosts = 1;
-
-        for (let i = 0; i < numPosts; i++) {
+        for (let i = 0; i < 3; i++) {
             const title = faker.lorem.sentence();
-            const content = faker.lorem.paragraphs(3);
-
-            await pool.query(
+            const content = faker.lorem.paragraphs();
+            const [result] = await pool.query(
                 'INSERT INTO posts (user_id, title, content) VALUES (?, ?, ?)',
                 [user.id, title, content]
             );
+
+            // Create fake comments for each post
+            for (let j = 0; j < 5; j++) {
+                const commentUser = users[Math.floor(Math.random() * users.length)];
+                const commentContent = faker.lorem.sentence();
+                await pool.query(
+                    'INSERT INTO comments (post_id, user_id, content) VALUES (?, ?, ?)',
+                    [result.insertId, commentUser.id, commentContent]
+                );
+            }
         }
     }
 
-    const [posts] = await pool.query('SELECT * FROM posts');
-
-    for (const post of posts) {
-        const numComments = 2;
-
-        for (let i = 0; i < numComments; i++) {
-            const userId = users[Math.floor(Math.random() * users.length)].id;
-            const content = faker.lorem.sentence();
-
-            await pool.query(
-                'INSERT INTO comments (post_id, user_id, content) VALUES (?, ?, ?)',
-                [post.id, userId, content]
-            );
-        }
-    }
+    console.log('Fake data created successfully');
 };
-
 
 const initializeDatabase = async () => {
     try {
-        await createTables();
-        console.log('Tables créées avec succès');
+        console.log('Initializing database...');
 
-        await createFakeData();
-        console.log('Données fictives créées avec succès');
+        const dbExists = await checkDatabaseExists();
+        if (!dbExists) {
+            await createDatabase();
+            await createTables();
+            await createFakeData();
+        }
+
+        console.log('Database initialization completed successfully');
     } catch (error) {
         console.error('Erreur lors de l\'initialisation de la base de données:', error);
         throw error;

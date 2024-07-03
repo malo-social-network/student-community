@@ -5,6 +5,7 @@ require('dotenv').config();
 /** @type {import('@playwright/test').PlaywrightTestConfig} */
 const config = {
     testDir: './e2e',
+    globalSetup: require.resolve('./e2e/global-setup.js'),
     timeout: 30000,
     expect: {
         timeout: 5000

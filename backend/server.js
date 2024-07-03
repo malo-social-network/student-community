@@ -25,9 +25,19 @@ const startServer = async () => {
         console.log('Database created');
 
         const PORT = process.env.PORT || 5000;
-        app.listen(PORT, () => {
+        const server = app.listen(PORT, () => {
             console.log(`Serveur démarré sur le port ${PORT}`);
             console.log(`Doc API http://localhost:${PORT}/api-docs/`);
+        });
+
+        server.on('error', (error) => {
+            if (error.code === 'EADDRINUSE') {
+                console.log(`Le port ${PORT} est déjà utilisé. Tentative avec le port ${PORT + 1}`);
+                server.close();
+                app.listen(PORT + 1);
+            } else {
+                console.error('Erreur du serveur:', error);
+            }
         });
     } catch (error) {
         console.error('Error starting server:', error);
