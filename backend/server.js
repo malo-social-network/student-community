@@ -4,7 +4,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const swaggerUi = require('swagger-ui-express');
 const swaggerDocument = require('./swagger.json');
-const { createDatabase, initializeDefaultUser } = require('./config/database');
+const { initializeDatabase, initializeDefaultUser } = require('./config/database');
 const routes = require('./routes');
 const logger = require('./config/logger');
 
@@ -21,12 +21,12 @@ const startServer = async () => {
     try {
         console.log('Starting server...');
         console.log('Creating database...');
-        await createDatabase();
+        await initializeDatabase();
         console.log('Database created');
 
-        console.log('Initializing default user...');
-        await initializeDefaultUser();
-        console.log('Default user initialized');
+        // console.log('Initializing default user...');
+        // await initializeDefaultUser();
+        // console.log('Default user initialized');
 
         const PORT = process.env.PORT || 5000;
         app.listen(PORT, () => {

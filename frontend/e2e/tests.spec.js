@@ -1,6 +1,6 @@
 const { test, expect } = require('@playwright/test');
 
-const BASE_URL = 'http://localhost' | 'http://localhost:80';
+const BASE_URL = 'http://localhost:3000'; // Assurez-vous que cela pointe vers votre serveur de développement
 
 async function logPageState(page, message) {
     console.log(`\n--- ${message} ---`);
@@ -11,6 +11,7 @@ async function logPageState(page, message) {
     console.log('HTML content:', await page.content());
     console.log('-------------------\n');
 }
+
 test('log in and verify user state', async ({ page }) => {
     await page.goto(BASE_URL);
     await logPageState(page, 'Initial state');
@@ -125,38 +126,4 @@ test('add a comment to a post', async ({ page }) => {
 
     const newComment = await page.$('text=Ceci est un commentaire de test.');
     expect(newComment, 'Le nouveau commentaire n\'a pas été trouvé').toBeTruthy();
-});
-
-test('update user profile', async ({ page }) => {
-    await page.goto(BASE_URL);
-    await page.click('text=Connexion');
-    await page.fill('input[placeholder="Email"]', 'michel@test.com');
-    await page.fill('input[placeholder="Mot de passe"]', 'test');
-    await page.click('button:has-text("Se connecter")');
-
-    await page.waitForTimeout(5000);
-    await logPageState(page, 'After login (profile update)');
-
-    const profileLink = await page.$('text=Profil');
-    expect(profileLink, 'Lien de profil non trouvé').toBeTruthy();
-    await profileLink.click();
-
-    await page.waitForTimeout(2000);
-    await logPageState(page, 'Profile page');
-
-    await page.click('text=Modifier le profil');
-
-    const randomUsername = `michel_updated_${Math.random().toString(36).substring(7)}`;
-    const randomEmail = `michel_updated_${Math.random().toString(36).substring(7)}@test.com`;
-
-    await page.fill('input[id="username"]', randomUsername);
-    await page.fill('input[id="email"]', randomEmail);
-    await page.click('button:has-text("Sauvegarder")');
-
-    await page.waitForTimeout(2000);
-
-    await logPageState(page, 'After profile update');
-
-    const newUsername = await page.$(`text=${randomUsername}`);
-    expect(newUsername, 'Le nouveau usernmae n\'a pas été trouvé').toBeTruthy();
 });

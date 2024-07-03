@@ -1,2 +1,7 @@
 {"level":"info","message":"User logged in: joris@test.com","service":"user-service"}
 {"level":"info","message":"User logged in: michel@example.com","service":"user-service"}
+info: User logged in: michel@test.com
+info: User logged in: michel@test.com
+info: User logged in: michel@test.com
+info: User logged in: michel@test.com
+info: User logged in: michel@test.com

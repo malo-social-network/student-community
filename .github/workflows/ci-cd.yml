@@ -74,6 +74,8 @@ jobs:
         run: |
           cd frontend
           npm run test:e2e
+        env:
+          BASE_URL: 'http://localhost:3000'
 
       - name: Build Frontend
         run: |
