@@ -67,12 +67,12 @@ jobs:
         run: |
           cd backend
           echo "Starting backend..."
-          npm start &
+          npm start > backend.log 2>&1 &
           echo $! > ../backend.pid
           sleep 10
           if ps -p $(cat ../backend.pid) > /dev/null; then
             echo "Backend started successfully"
-            cat backend.log
+            tail -n 20 backend.log
           else
             echo "Backend failed to start"
             cat backend.log
