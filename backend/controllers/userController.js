@@ -12,7 +12,17 @@ exports.getProfile = async (req, res) => {
 exports.updateProfile = async (req, res) => {
     const pool = getPool();
     await pool.query('UPDATE users SET username = ?, email = ? WHERE id = ?', [req.body.username, req.body.email, req.user.id]);
-    res.json({ message: 'Profile updated successfully' });
+
+    const [updatedUser] = await pool.query('SELECT username, email FROM users WHERE id = ?', [req.user.id]);
+
+    if (updatedUser.length === 0) {
+        return res.status(404).json({ message: 'User not found after update' });
+    }
+
+    res.json({
+        message: 'Profile updated successfully',
+        user: updatedUser[0]
+    });
 };
 
 exports.deleteProfile = async (req, res) => {

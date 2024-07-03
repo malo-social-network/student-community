@@ -59,7 +59,14 @@ const createTables = async () => {
 const createFakeData = async () => {
     const pool = getPool();
 
-    for (let i = 0; i < 10; i++) {
+    const michelPassword = await bcrypt.hash('test', 10);
+    await pool.query(
+        'INSERT INTO users (username, email, password) VALUES (?, ?, ?)',
+        ['michel', 'michel@test.com', michelPassword]
+    );
+    console.log('Utilisateur Michel ajouté avec succès');
+
+    for (let i = 0; i < 9; i++) {
         const username = faker.internet.userName();
         const email = faker.internet.email();
         const password = await bcrypt.hash('password', 10);
