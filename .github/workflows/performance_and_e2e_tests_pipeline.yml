@@ -30,7 +30,10 @@ jobs:
         run: sudo apt-get install -y mysql-client
 
       - name: Set up Database Schema
-        run: mysql -h 127.0.0.1 -u root -proot_password student_community < backend/init_db.sql
+        run: |
+          echo "Initializing database schema..."
+          mysql -h 127.0.0.1 -u root -proot_password student_community < backend/init_db.sql
+          echo "Database schema initialized"
 
       - name: Check MySQL Status
         run: |
