@@ -29,6 +29,11 @@ jobs:
       - name: Install MySQL Client
         run: sudo apt-get install -y mysql-client
 
+      - name: Start MySQL
+        run: |
+          sudo systemctl start mysql.service
+          sudo systemctl status mysql.service
+
       - name: Set up Database Schema
         run: |
           echo "Initializing database schema..."
@@ -38,7 +43,7 @@ jobs:
       - name: Check MySQL Status
         run: |
           sudo systemctl status mysql.service
-          mysql -h 127.0.0.1 -u root -proot_password -e "SHOW DATABASES;"
+          sudo mysql -h 127.0.0.1 -u root -proot_password -e "SHOW DATABASES;"
 
       - name: Set up Node.js
         uses: actions/setup-node@v2
@@ -56,26 +61,34 @@ jobs:
           npm ci 
 
       - name: Start Backend
-        env:
-          DB_HOST: 127.0.0.1
-          DB_USER: root
-          DB_PASSWORD: root_password
-          DB_NAME: student_community
         run: |
           cd backend
           echo "Starting backend..."
-          nohup npm start > backend.log 2>&1 &
+          npm start &
           echo $! > ../backend.pid
-          echo "Backend started with PID $(cat ../backend.pid)"
           sleep 10
-          echo "Backend log:"
-          cat backend.log
+          if ps -p $(cat ../backend.pid) > /dev/null; then
+            echo "Backend started successfully"
+          else
+            echo "Backend failed to start"
+            cat backend.log
+            exit 1
+          fi
 
       - name: Start Frontend
         run: |
           cd frontend
-          nohup npm start > frontend.log 2>&1 &
+          echo "Starting frontend..."
+          npm start &
           echo $! > ../frontend.pid
+          sleep 10
+          if ps -p $(cat ../frontend.pid) > /dev/null; then
+            echo "Frontend started successfully"
+          else
+            echo "Frontend failed to start"
+            cat frontend.log
+            exit 1
+          fi
 
       - name: Download wait-for-it script
         run: |
@@ -85,11 +98,11 @@ jobs:
       - name: Wait for services to be ready
         run: |
           echo "Waiting for backend to start..."
-          timeout 120s bash -c 'until nc -z localhost 5000; do echo "Waiting for backend..."; sleep 5; done'
+          timeout 120s bash -c 'until nc -z localhost 5000; do echo "Waiting for backend..."; sleep 5; done' || (echo "Backend failed to start" && exit 1)
           echo "Backend is ready!"
 
           echo "Waiting for frontend to start..."
-          timeout 120s bash -c 'until nc -z localhost 3000; do echo "Waiting for frontend..."; sleep 5; done'
+          timeout 120s bash -c 'until nc -z localhost 3000; do echo "Waiting for frontend..."; sleep 5; done' || (echo "Frontend failed to start" && exit 1)
           echo "Frontend is ready!"
 
       - name: Run Backend Unit Tests
