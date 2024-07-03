@@ -138,7 +138,7 @@ jobs:
           JWT_SECRET: 'your_jwt_secret'
           DB_HOST: 127.0.0.1
           DB_USER: root
-          DB_PASSWORD: new_root_password
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
           DB_NAME: student_community
 
       - name: Install k6
