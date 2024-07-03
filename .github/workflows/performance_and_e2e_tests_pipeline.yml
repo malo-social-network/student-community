@@ -29,35 +29,48 @@ jobs:
       - name: Install MySQL Client
         run: sudo apt-get install -y mysql-client
 
-      - name: Start MySQL
+      - name: Wait for MySQL to be ready
         run: |
-          sudo systemctl start mysql.service
-          sudo systemctl status mysql.service
+          timeout 60s bash -c 'until mysqladmin ping -h"127.0.0.1" -P"3306" --silent; do sleep 1; done'
+
+      - name: Reset MySQL root password
+        run: |
+          sudo mysql -h 127.0.0.1 -P 3306 -u root -proot_password -e "ALTER USER 'root'@'localhost' IDENTIFIED BY 'new_root_password'; FLUSH PRIVILEGES;"
 
       - name: Check MySQL user
         run: |
-          sudo mysql -u root -proot_password -e "SELECT User, Host, plugin FROM mysql.user;"
+          mysql -h 127.0.0.1 -P 3306 -u root -pnew_root_password -e "SELECT User, Host, plugin FROM mysql.user;"
 
       - name: Create database if not exists
         run: |
-          sudo mysql -u root -proot_password -e "CREATE DATABASE IF NOT EXISTS student_community;"
+          mysql -h 127.0.0.1 -P 3306 -u root -pnew_root_password -e "CREATE DATABASE IF NOT EXISTS student_community;"
 
       - name: Set up Database Schema
         run: |
           echo "Initializing database schema..."
-          sudo mysql -u root -proot_password student_community < backend/init_db.sql
+          mysql -h 127.0.0.1 -P 3306 -u root -pnew_root_password student_community < backend/init_db.sql
           echo "Database schema initialized"
 
       - name: Check Database Content
         run: |
           echo "Checking database content..."
-          sudo mysql -u root -proot_password -e "USE student_community; SHOW TABLES;"
+          mysql -h 127.0.0.1 -P 3306 -u root -pnew_root_password -e "USE student_community; SHOW TABLES;"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '16'
+
+      - name: Install Backend Dependencies
+        run: |
+          cd backend
+          npm ci
 
       - name: Start Backend
         env:
           DB_HOST: 127.0.0.1
           DB_USER: root
-          DB_PASSWORD: root_password
+          DB_PASSWORD: new_root_password
           DB_NAME: student_community
         run: |
           cd backend
@@ -73,16 +86,6 @@ jobs:
             cat backend.log
             exit 1
           fi
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v2
-        with:
-          node-version: '16'
-
-      - name: Install Backend Dependencies
-        run: |
-          cd backend
-          npm ci
 
       - name: Install Frontend Dependencies
         run: |
@@ -104,11 +107,6 @@ jobs:
             exit 1
           fi
 
-      - name: Download wait-for-it script
-        run: |
-          curl -o wait-for-it.sh https://raw.githubusercontent.com/vishnubob/wait-for-it/master/wait-for-it.sh
-          chmod +x wait-for-it.sh
-
       - name: Wait for services to be ready
         run: |
           echo "Waiting for backend to start..."
@@ -126,7 +124,7 @@ jobs:
         env:
           DB_HOST: 127.0.0.1
           DB_USER: root
-          DB_PASSWORD: root_password
+          DB_PASSWORD: new_root_password
           DB_NAME: student_community
           JWT_SECRET: your_jwt_secret
 
@@ -144,7 +142,7 @@ jobs:
           JWT_SECRET: 'your_jwt_secret'
           DB_HOST: 127.0.0.1
           DB_USER: root
-          DB_PASSWORD: root_password
+          DB_PASSWORD: new_root_password
           DB_NAME: student_community
 
       - name: Install k6
@@ -165,4 +163,3 @@ jobs:
         run: |
           if [ -f backend.pid ]; then kill $(cat backend.pid) || true; fi
           if [ -f frontend.pid ]; then kill $(cat frontend.pid) || true; fi
-
