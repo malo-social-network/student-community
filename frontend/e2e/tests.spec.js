@@ -1,6 +1,6 @@
 const { test, expect } = require('@playwright/test');
 
-const BASE_URL = 'http://localhost:3000'; // Assurez-vous que cela pointe vers votre serveur de développement
+const BASE_URL = process.env.BASE_URL || 'http://localhost:3000';
 
 async function logPageState(page, message) {
     console.log(`\n--- ${message} ---`);
@@ -23,21 +23,20 @@ test('log in and verify user state', async ({ page }) => {
     await page.fill('input[placeholder="Mot de passe"]', 'test');
     await page.click('button:has-text("Se connecter")');
 
-    await page.waitForTimeout(5000);
+    await page.waitForTimeout(5000); // Attendre que la connexion soit traitée
     await logPageState(page, 'After login attempt');
 
+    // Vérifier la présence des éléments indiquant que l'utilisateur est connecté
     const loggedInIndicators = ['Profil', 'Déconnexion', 'Créer un post'];
     for (const indicator of loggedInIndicators) {
         const element = await page.$(`text=${indicator}`);
         console.log(`Indicator "${indicator}" ${element ? 'found' : 'not found'}`);
     }
 
-    const isLoggedIn = await page.evaluate(() => {
-        return !!localStorage.getItem('token') || document.cookie.includes('token');
-    });
-    console.log('Login state based on token:', isLoggedIn);
-
     const anyLoggedInElement = await page.$('text=Profil');
+    if (!anyLoggedInElement) {
+        console.error('Aucun élément indiquant que l\'utilisateur est connecté n\'a été trouvé');
+    }
     expect(anyLoggedInElement, 'Aucun élément indiquant que l\'utilisateur est connecté n\'a été trouvé').toBeTruthy();
 });
 
@@ -79,10 +78,15 @@ test('create a new post', async ({ page }) => {
     await page.fill('input[placeholder="Mot de passe"]', 'test');
     await page.click('button:has-text("Se connecter")');
 
-    await page.waitForTimeout(5000);
+    await page.waitForTimeout(5000); // Attendre que la connexion soit traitée
     await logPageState(page, 'After login (create post)');
 
-    await page.click('text=Créer un post');
+    const createPostButton = await page.$('text=Créer un post');
+    if (!createPostButton) {
+        console.error('Bouton "Créer un post" non trouvé');
+    }
+    expect(createPostButton, 'Bouton "Créer un post" non trouvé').toBeTruthy();
+    await createPostButton.click();
 
     await page.waitForTimeout(2000);
     await logPageState(page, 'Create post form');
@@ -98,8 +102,12 @@ test('create a new post', async ({ page }) => {
     await logPageState(page, 'After creating post');
 
     const newPost = await page.$(`text=${randomTitle}`);
+    if (!newPost) {
+        console.error('Le nouveau post n\'a pas été trouvé');
+    }
     expect(newPost, 'Le nouveau post n\'a pas été trouvé').toBeTruthy();
 });
+
 
 test('add a comment to a post', async ({ page }) => {
     await page.goto(BASE_URL);
