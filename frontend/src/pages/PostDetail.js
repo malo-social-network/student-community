@@ -23,12 +23,24 @@ const PostDetail = () => {
     if (error) return <div className="error">{error}</div>;
     if (!post) return <div>Chargement...</div>;
 
+    const formatDate = (dateString) => {
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) {
+            return 'Date inconnue';
+        } else {
+            const year = date.getFullYear();
+            const month = (date.getMonth() + 1).toString().padStart(2, '0');
+            const day = date.getDate().toString().padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+    };
+
     return (
         <div className="post-detail">
             <h1>{post.title}</h1>
             <p>{post.content}</p>
-            <small>Par {post.username} le {new Date(post.created_at).toLocaleString()}</small>
-            <CommentSection postId={post.id} />
+            <p>Par {post.username} le {formatDate(post.created_at)} </p>
+            <CommentSection postId={post.id}/>
         </div>
     );
 };

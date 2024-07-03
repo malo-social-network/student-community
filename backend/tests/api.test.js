@@ -39,18 +39,19 @@ describe('User CRUD Operations', () => {
     expect(res.body).toHaveProperty('username', 'testuser');
   });
 
-  test('Should update user profile', async () => {
-    const res = await request(app)
-        .put('/api/users/profile')
-        .set('Authorization', `Bearer ${authToken}`)
-        .send({
-          username: 'updateduser',
-          email: 'updated@example.com'
-        });
-    expect(res.statusCode).toBe(200);
-    expect(res.body).toHaveProperty('username', 'updateduser');
-    expect(res.body).toHaveProperty('email', 'updated@example.com');
-  });
+    test('Should update user profile', async () => {
+        const res = await request(app)
+            .put('/api/users/profile')
+            .set('Authorization', `Bearer ${authToken}`)
+            .send({
+                username: 'updateduser',
+                email: 'updated@example.com'
+            });
+        expect(res.statusCode).toBe(200);
+        expect(res.body).toHaveProperty('message', 'Profile updated successfully');
+        expect(res.body.user).toHaveProperty('username', 'updateduser');
+        expect(res.body.user).toHaveProperty('email', 'updated@example.com');
+    });
 });
 
 describe('Post CRUD Operations', () => {

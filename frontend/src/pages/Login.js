@@ -17,7 +17,6 @@ const Login = () => {
         try {
             const data = await login(email, password);
             console.log('Login successful', data);
-            // Ici, vous devriez stocker le token d'authentification et rediriger l'utilisateur
             localStorage.setItem('token', data.token);
             navigate('/');
         } catch (err) {

@@ -56,65 +56,65 @@ const createTables = async () => {
     `);
 };
 
-// const createFakeData = async () => {
-//     const pool = getPool();
-//
-//     // Check if user 'michel' already exists
-//     const [existingUsers] = await pool.query('SELECT * FROM users WHERE username = ?', ['michel']);
-//     if (existingUsers.length === 0) {
-//         const michelPassword = await bcrypt.hash('test', 10);
-//         await pool.query(
-//             'INSERT INTO users (username, email, password) VALUES (?, ?, ?)',
-//             ['michel', 'michel@test.com', michelPassword]
-//         );
-//         console.log('Utilisateur Michel ajouté avec succès');
-//     } else {
-//         console.log('Utilisateur Michel existe déjà');
-//     }
-//
-//     for (let i = 0; i < 9; i++) {
-//         const username = faker.internet.userName();
-//         const email = faker.internet.email();
-//         const password = await bcrypt.hash('password', 10);
-//
-//         await pool.query(
-//             'INSERT INTO users (username, email, password) VALUES (?, ?, ?)',
-//             [username, email, password]
-//         );
-//     }
-//
-//     const [users] = await pool.query('SELECT * FROM users');
-//
-//     for (const user of users) {
-//         const numPosts = Math.floor(Math.random() * 5) + 1;
-//
-//         for (let i = 0; i < numPosts; i++) {
-//             const title = faker.lorem.sentence();
-//             const content = faker.lorem.paragraphs(3);
-//
-//             await pool.query(
-//                 'INSERT INTO posts (user_id, title, content) VALUES (?, ?, ?)',
-//                 [user.id, title, content]
-//             );
-//         }
-//     }
-//
-//     const [posts] = await pool.query('SELECT * FROM posts');
-//
-//     for (const post of posts) {
-//         const numComments = Math.floor(Math.random() * 11);
-//
-//         for (let i = 0; i < numComments; i++) {
-//             const userId = users[Math.floor(Math.random() * users.length)].id;
-//             const content = faker.lorem.sentence();
-//
-//             await pool.query(
-//                 'INSERT INTO comments (post_id, user_id, content) VALUES (?, ?, ?)',
-//                 [post.id, userId, content]
-//             );
-//         }
-//     }
-// };
+const createFakeData = async () => {
+    const pool = getPool();
+
+    // Check if user 'michel' already exists
+    const [existingUsers] = await pool.query('SELECT * FROM users WHERE username = ?', ['michel']);
+    if (existingUsers.length === 0) {
+        const michelPassword = await bcrypt.hash('test', 10);
+        await pool.query(
+            'INSERT INTO users (username, email, password) VALUES (?, ?, ?)',
+            ['michel', 'michel@test.com', michelPassword]
+        );
+        console.log('Utilisateur Michel ajouté avec succès');
+    } else {
+        console.log('Utilisateur Michel existe déjà');
+    }
+
+    for (let i = 0; i < 1; i++) {
+        const username = faker.internet.userName();
+        const email = faker.internet.email();
+        const password = await bcrypt.hash('password', 10);
+
+        await pool.query(
+            'INSERT INTO users (username, email, password) VALUES (?, ?, ?)',
+            [username, email, password]
+        );
+    }
+
+    const [users] = await pool.query('SELECT * FROM users');
+
+    for (const user of users) {
+        const numPosts = 1;
+
+        for (let i = 0; i < numPosts; i++) {
+            const title = faker.lorem.sentence();
+            const content = faker.lorem.paragraphs(3);
+
+            await pool.query(
+                'INSERT INTO posts (user_id, title, content) VALUES (?, ?, ?)',
+                [user.id, title, content]
+            );
+        }
+    }
+
+    const [posts] = await pool.query('SELECT * FROM posts');
+
+    for (const post of posts) {
+        const numComments = 2;
+
+        for (let i = 0; i < numComments; i++) {
+            const userId = users[Math.floor(Math.random() * users.length)].id;
+            const content = faker.lorem.sentence();
+
+            await pool.query(
+                'INSERT INTO comments (post_id, user_id, content) VALUES (?, ?, ?)',
+                [post.id, userId, content]
+            );
+        }
+    }
+};
 
 
 const initializeDatabase = async () => {
@@ -132,5 +132,6 @@ const initializeDatabase = async () => {
 
 module.exports = {
     initializeDatabase,
-    getPool
+    getPool,
+    initializeDefaultUser: createFakeData
 };

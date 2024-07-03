@@ -6,6 +6,6 @@ const { getProfile, updateProfile, deleteProfile, getUserPosts } = require('../c
 router.get('/profile', authenticateToken, getProfile);
 router.put('/profile', authenticateToken, updateProfile);
 router.delete('/profile', authenticateToken, deleteProfile);
-router.get('/:userId/posts', authenticateToken, getUserPosts);
+router.get('/posts', authenticateToken, getUserPosts);
 
 module.exports = router;

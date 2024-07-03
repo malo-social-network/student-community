@@ -18,14 +18,23 @@ exports.createPost = async (req, res) => {
 
 exports.getAllPosts = async (req, res) => {
     const pool = getPool();
-    const [posts] = await pool.query('SELECT * FROM posts');
+    const [posts] = await pool.query(`
+        SELECT posts.*, users.username 
+        FROM posts 
+        JOIN users ON posts.user_id = users.id
+    `);
     res.json(posts);
 };
 
 exports.getPost = async (req, res) => {
     const pool = getPool();
     console.log('Fetching post with ID:', req.params.id);
-    const [post] = await pool.query('SELECT * FROM posts WHERE id = ?', [req.params.id]);
+    const [post] = await pool.query(`
+        SELECT posts.*, users.username 
+        FROM posts 
+        JOIN users ON posts.user_id = users.id 
+        WHERE posts.id = ?
+    `, [req.params.id]);
     if (post.length === 0) {
         return res.status(404).json({ message: 'Post not found' });
     }
@@ -65,17 +74,37 @@ exports.deletePost = async (req, res) => {
 
 exports.getPostComments = async (req, res) => {
     const pool = getPool();
-    const [comments] = await pool.query('SELECT * FROM comments WHERE post_id = ?', [req.params.postId]);
-    res.json(comments);
+    try {
+        const [comments] = await pool.query(`
+            SELECT comments.*, users.username 
+            FROM comments 
+            JOIN users ON comments.user_id = users.id 
+            WHERE comments.post_id = ?
+            ORDER BY comments.created_at DESC
+        `, [req.params.postId]);
+        res.json(comments);
+    } catch (error) {
+        console.error('Erreur lors de la récupération des commentaires:', error);
+        res.status(500).json({ message: 'Erreur serveur' });
+    }
 };
 
 exports.addComment = async (req, res) => {
+    const pool = getPool();
     try {
-        const pool = getPool();
-        const [result] = await pool.query('INSERT INTO comments (post_id, user_id, content) VALUES (?, ?, ?)', [req.params.postId, req.user.id, req.body.content]);
-        res.status(201).json({ id: result.insertId, content: req.body.content });
+        const [result] = await pool.query('INSERT INTO comments (post_id, user_id, content) VALUES (?, ?, ?)',
+            [req.params.postId, req.user.id, req.body.content]);
+
+        const [newComment] = await pool.query(`
+            SELECT comments.*, users.username 
+            FROM comments 
+            JOIN users ON comments.user_id = users.id 
+            WHERE comments.id = ?
+        `, [result.insertId]);
+
+        res.status(201).json(newComment[0]);
     } catch (error) {
-        console.error('Failed to add comment:', error);
-        res.status(500).json({ message: 'Failed to add comment', error });
+        console.error('Erreur lors de l\'ajout du commentaire:', error);
+        res.status(500).json({ message: 'Erreur serveur' });
     }
 };

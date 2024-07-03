@@ -5,34 +5,30 @@ import { Link } from 'react-router-dom';
 const Profile = () => {
     const [user, setUser] = useState(null);
     const [posts, setPosts] = useState([]);
+    const [loading, setLoading] = useState(true);
     const [isEditing, setIsEditing] = useState(false);
     const [editedUser, setEditedUser] = useState({});
-    const [error, setError] = useState('');
-
-    useEffect(() => {
-        fetchUserData();
-    }, []);
 
     const fetchUserData = async () => {
         try {
             const userData = await getProfile();
             setUser(userData);
             setEditedUser(userData);
-            const userPosts = await getUserPosts(userData.id);
+            const userPosts = await getUserPosts();
             setPosts(userPosts);
-        } catch (err) {
-            setError('Erreur lors du chargement du profil');
-            console.error(err);
+        } catch (error) {
+            console.error("Erreur lors du chargement des données:", error);
+        } finally {
+            setLoading(false);
         }
     };
 
+    useEffect(() => {
+        fetchUserData();
+    }, []);
+
     const handleEdit = () => {
         setIsEditing(true);
-    };
-
-    const handleCancel = () => {
-        setIsEditing(false);
-        setEditedUser(user);
     };
 
     const handleChange = (e) => {
@@ -42,22 +38,19 @@ const Profile = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const updatedUserData = await updateProfile(editedUser);
-            setUser(updatedUserData);
+            await updateProfile(editedUser);
+            await fetchUserData(); // Recharger les données après la mise à jour
             setIsEditing(false);
-            setError('');
-        } catch (err) {
-            setError('Erreur lors de la mise à jour du profil');
-            console.error(err);
+        } catch (error) {
+            console.error("Erreur lors de la mise à jour du profil:", error);
         }
     };
 
-    if (!user) return <div>Chargement...</div>;
+    if (loading) return <div>Chargement...</div>;
 
     return (
-        <div className="profile">
+        <div>
             <h1>Profil</h1>
-            {error && <p className="error">{error}</p>}
             {isEditing ? (
                 <form onSubmit={handleSubmit}>
                     <div>
@@ -66,7 +59,7 @@ const Profile = () => {
                             type="text"
                             id="username"
                             name="username"
-                            value={editedUser.username}
+                            value={editedUser.username || ''}
                             onChange={handleChange}
                         />
                     </div>
@@ -76,17 +69,17 @@ const Profile = () => {
                             type="email"
                             id="email"
                             name="email"
-                            value={editedUser.email}
+                            value={editedUser.email || ''}
                             onChange={handleChange}
                         />
                     </div>
                     <button type="submit">Sauvegarder</button>
-                    <button type="button" onClick={handleCancel}>Annuler</button>
+                    <button type="button" onClick={() => setIsEditing(false)}>Annuler</button>
                 </form>
             ) : (
                 <div>
-                    <p><strong>Nom d'utilisateur:</strong> {user.username}</p>
-                    <p><strong>Email:</strong> {user.email}</p>
+                    <p>Nom d'utilisateur: {user?.username}</p>
+                    <p>Email: {user?.email}</p>
                     <button onClick={handleEdit}>Modifier le profil</button>
                 </div>
             )}

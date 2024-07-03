@@ -1,6 +1,15 @@
 const { test, expect } = require('@playwright/test');
+const { faker } = require('@faker-js/faker');
 
-const BASE_URL = 'http://localhost';
+test.setTimeout(60000);
+
+const BASE_URL = 'http://localhost:3000';
+
+const testUser = {
+    username: 'michel',
+    email: 'michel@test.com',
+    password: 'test'
+};
 
 async function logPageState(page, message) {
     console.log(`\n--- ${message} ---`);
@@ -11,74 +20,31 @@ async function logPageState(page, message) {
     console.log('HTML content:', await page.content());
     console.log('-------------------\n');
 }
-test('log in and verify user state', async ({ page }) => {
-    await page.goto(BASE_URL);
-    await logPageState(page, 'Initial state');
 
-    await page.click('text=Connexion');
-    await logPageState(page, 'Login page');
-
-    await page.fill('input[placeholder="Email"]', 'michel@test.com');
-    await page.fill('input[placeholder="Mot de passe"]', 'test');
+async function login(page) {
+    await page.goto(`${BASE_URL}/login`);
+    await page.fill('input[placeholder="Email"]', testUser.email);
+    await page.fill('input[placeholder="Mot de passe"]', testUser.password);
     await page.click('button:has-text("Se connecter")');
+    await page.waitForTimeout(2000);
+}
 
-    await page.waitForTimeout(5000);
+test('log in and verify user state', async ({ page }) => {
+    await login(page);
     await logPageState(page, 'After login attempt');
 
-    const loggedInIndicators = ['Profil', 'Déconnexion', 'Créer un post'];
-    for (const indicator of loggedInIndicators) {
-        const element = await page.$(`text=${indicator}`);
-        console.log(`Indicator "${indicator}" ${element ? 'found' : 'not found'}`);
-    }
+    const profileLink = await page.$('text=Profil');
+    expect(profileLink, 'Lien de profil non trouvé').toBeTruthy();
 
-    const isLoggedIn = await page.evaluate(() => {
-        return !!localStorage.getItem('token') || document.cookie.includes('token');
-    });
-    console.log('Login state based on token:', isLoggedIn);
+    const createPostLink = await page.$('text=Créer un post');
+    expect(createPostLink, 'Lien de création de post non trouvé').toBeTruthy();
 
-    const anyLoggedInElement = await page.$('text=Profil');
-    expect(anyLoggedInElement, 'Aucun élément indiquant que l\'utilisateur est connecté n\'a été trouvé').toBeTruthy();
-});
-
-test('navigate through the application', async ({ page }) => {
-    await page.goto(BASE_URL);
-    await page.click('text=Connexion');
-    await page.fill('input[placeholder="Email"]', 'michel@test.com');
-    await page.fill('input[placeholder="Mot de passe"]', 'test');
-    await page.click('button:has-text("Se connecter")');
-
-    await page.waitForTimeout(5000);
-    await logPageState(page, 'After login');
-
-    const createPostButton = await page.$('text=Créer un post, text=Nouveau post, button:has-text("Post")');
-    if (createPostButton) {
-        await createPostButton.click();
-        await page.waitForTimeout(2000);
-        await logPageState(page, 'Create post page');
-    } else {
-        console.log('Create post button not found');
-    }
-
-    const profileLink = await page.$('text=Profil, a:has-text("Profil")');
-    if (profileLink) {
-        await profileLink.click();
-        await page.waitForTimeout(2000);
-        await logPageState(page, 'Profile page');
-    } else {
-        console.log('Profile link not found');
-    }
-
-    await logPageState(page, 'Final state');
+    const logoutLink = await page.$('text=Déconnexion');
+    expect(logoutLink, 'Lien de déconnexion non trouvé').toBeTruthy();
 });
 
 test('create a new post', async ({ page }) => {
-    await page.goto(BASE_URL);
-    await page.click('text=Connexion');
-    await page.fill('input[placeholder="Email"]', 'michel@test.com');
-    await page.fill('input[placeholder="Mot de passe"]', 'test');
-    await page.click('button:has-text("Se connecter")');
-
-    await page.waitForTimeout(5000);
+    await login(page);
     await logPageState(page, 'After login (create post)');
 
     await page.click('text=Créer un post');
@@ -86,8 +52,8 @@ test('create a new post', async ({ page }) => {
     await page.waitForTimeout(2000);
     await logPageState(page, 'Create post form');
 
-    const randomTitle = `Mon nouveau post de test ${Math.random().toString(36).substring(7)}`;
-    const randomContent = `Ceci est le contenu de mon post de test ${Math.random().toString(36).substring(7)}`;
+    const randomTitle = `Mon nouveau post de test ${faker.lorem.word()}`;
+    const randomContent = `Ceci est le contenu de mon post de test ${faker.lorem.paragraph()}`;
 
     await page.fill('input[id="title"]', randomTitle);
     await page.fill('textarea[id="content"]', randomContent);
@@ -101,13 +67,7 @@ test('create a new post', async ({ page }) => {
 });
 
 test('add a comment to a post', async ({ page }) => {
-    await page.goto(BASE_URL);
-    await page.click('text=Connexion');
-    await page.fill('input[placeholder="Email"]', 'michel@test.com');
-    await page.fill('input[placeholder="Mot de passe"]', 'test');
-    await page.click('button:has-text("Se connecter")');
-
-    await page.waitForTimeout(5000);
+    await login(page);
     await logPageState(page, 'After login (comment test)');
 
     const firstPost = await page.$('text=Lire la suite');
@@ -117,24 +77,19 @@ test('add a comment to a post', async ({ page }) => {
     await page.waitForTimeout(2000);
     await logPageState(page, 'Post detail page');
 
-    await page.fill('textarea[placeholder="Ajouter un commentaire..."]', 'Ceci est un commentaire de test.');
+    const commentContent = `Ceci est un commentaire de test ${faker.lorem.sentence()}`;
+    await page.fill('textarea[placeholder="Ajouter un commentaire..."]', commentContent);
     await page.click('button:has-text("Publier")');
 
     await page.waitForTimeout(2000);
     await logPageState(page, 'After adding comment');
 
-    const newComment = await page.$('text=Ceci est un commentaire de test.');
+    const newComment = await page.$(`text=${commentContent}`);
     expect(newComment, 'Le nouveau commentaire n\'a pas été trouvé').toBeTruthy();
 });
 
-test('update user profile', async ({ page }) => {
-    await page.goto(BASE_URL);
-    await page.click('text=Connexion');
-    await page.fill('input[placeholder="Email"]', 'michel@test.com');
-    await page.fill('input[placeholder="Mot de passe"]', 'test');
-    await page.click('button:has-text("Se connecter")');
-
-    await page.waitForTimeout(5000);
+test('update user profile and revert changes', async ({ page }) => {
+    await login(page);
     await logPageState(page, 'After login (profile update)');
 
     const profileLink = await page.$('text=Profil');
@@ -146,17 +101,51 @@ test('update user profile', async ({ page }) => {
 
     await page.click('text=Modifier le profil');
 
-    const randomUsername = `michel_updated_${Math.random().toString(36).substring(7)}`;
-    const randomEmail = `michel_updated_${Math.random().toString(36).substring(7)}@test.com`;
+    const newUsername = `michel_updated_${faker.random.alphaNumeric(5)}`;
+    const newEmail = `michel_updated_${faker.random.alphaNumeric(5)}@test.com`;
 
-    await page.fill('input[id="username"]', randomUsername);
-    await page.fill('input[id="email"]', randomEmail);
+    await page.fill('input[id="username"]', newUsername);
+    await page.fill('input[id="email"]', newEmail);
     await page.click('button:has-text("Sauvegarder")');
 
     await page.waitForTimeout(2000);
-
     await logPageState(page, 'After profile update');
 
-    const newUsername = await page.$(`text=${randomUsername}`);
-    expect(newUsername, 'Le nouveau usernmae n\'a pas été trouvé').toBeTruthy();
+    const updatedUsername = await page.$(`text=${newUsername}`);
+    expect(updatedUsername, 'Le nouveau nom d\'utilisateur n\'a pas été trouvé').toBeTruthy();
+
+    await page.click('text=Modifier le profil');
+    await page.fill('input[id="username"]', testUser.username);
+    await page.fill('input[id="email"]', testUser.email);
+    await page.click('button:has-text("Sauvegarder")');
+
+    await page.waitForTimeout(2000);
+    await logPageState(page, 'After reverting profile');
+
+    const revertedUsername = await page.$(`text=${testUser.username}`);
+    expect(revertedUsername, 'Le nom d\'utilisateur n\'a pas été remis à sa valeur initiale').toBeTruthy();
+});
+
+test('log out user', async ({ page }) => {
+    await login(page);
+    await logPageState(page, 'After login (logout test)');
+
+    const logoutButton = await page.$('text=Déconnexion');
+    expect(logoutButton, 'Bouton de déconnexion non trouvé').toBeTruthy();
+    await logoutButton.click();
+
+    await page.waitForTimeout(2000);
+    await logPageState(page, 'After logout');
+
+    const loginLink = await page.$('text=Connexion');
+    expect(loginLink, 'Lien de connexion non trouvé après déconnexion').toBeTruthy();
+
+    const registerLink = await page.$('text=Inscription');
+    expect(registerLink, 'Lien d\'inscription non trouvé après déconnexion').toBeTruthy();
+
+    const profileLink = await page.$('text=Profil');
+    expect(profileLink, 'Lien de profil toujours visible après déconnexion').toBeFalsy();
+
+    const createPostLink = await page.$('text=Créer un post');
+    expect(createPostLink, 'Lien de création de post toujours visible après déconnexion').toBeFalsy();
 });

@@ -39,6 +39,12 @@ exports.deleteProfile = async (req, res) => {
 
 exports.getUserPosts = async (req, res) => {
     const pool = getPool();
-    const [posts] = await pool.query('SELECT * FROM posts WHERE user_id = ?', [req.params.userId]);
+    const userId = req.user.id;
+    const [posts] = await pool.query(`
+        SELECT posts.*, users.username 
+        FROM posts 
+        JOIN users ON posts.user_id = users.id 
+        WHERE posts.user_id = ?
+    `, [userId]);
     res.json(posts);
 };

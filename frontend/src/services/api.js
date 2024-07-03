@@ -60,13 +60,14 @@ export const createPost = async (title, content) => {
     }
 };
 
-export const getUserPosts = async (userId) => {
+export const getUserPosts = async () => {
     try {
         const headers = getAuthHeaders();
-        const response = await axios.get(`${API_URL}/users/${userId}/posts`, { headers });
+        const response = await axios.get(`${API_URL}/users/posts`, { headers });
         return response.data;
     } catch (error) {
-        throw error.response ? error.response.data : new Error('Erreur réseau');
+        console.error("Erreur lors de la récupération des posts de l'utilisateur:", error);
+        throw error;
     }
 };
 
@@ -112,6 +113,7 @@ export const addComment = async (postId, content) => {
         );
         return response.data;
     } catch (error) {
-        throw error.response ? error.response.data : new Error('Erreur réseau');
+        console.error("Erreur lors de l'ajout du commentaire:", error);
+        throw error;
     }
 };

@@ -22,11 +22,25 @@ const CommentSection = ({ postId }) => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const comment = await addComment(postId, newComment);
+            let comment = await addComment(postId, newComment);
+            if (!comment.created_at) {
+                comment.created_at = new Date().toISOString();
+            }
             setComments([comment, ...comments]);
             setNewComment('');
         } catch (err) {
             setError('Erreur lors de l\'ajout du commentaire');
+        }
+    };
+    const formatDate = (dateString) => {
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) {
+            return 'Date inconnue';
+        } else {
+            const year = date.getFullYear();
+            const month = (date.getMonth() + 1).toString().padStart(2, '0');
+            const day = date.getDate().toString().padStart(2, '0');
+            return `${year}-${month}-${day}`;
         }
     };
 
@@ -47,7 +61,7 @@ const CommentSection = ({ postId }) => {
                 {comments.map((comment) => (
                     <div key={comment.id} className="comment">
                         <p>{comment.content}</p>
-                        <small>Par {comment.username} le {new Date(comment.created_at).toLocaleString()}</small>
+                        <small>Par {comment.username || 'Utilisateur inconnu'} le {formatDate(comment.created_at)}</small>
                     </div>
                 ))}
             </div>

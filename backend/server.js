@@ -24,10 +24,6 @@ const startServer = async () => {
         await initializeDatabase();
         console.log('Database created');
 
-        // console.log('Initializing default user...');
-        // await initializeDefaultUser();
-        // console.log('Default user initialized');
-
         const PORT = process.env.PORT || 5000;
         app.listen(PORT, () => {
             console.log(`Serveur démarré sur le port ${PORT}`);
