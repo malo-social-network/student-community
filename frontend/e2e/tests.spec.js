@@ -1,6 +1,6 @@
 const { test, expect } = require('@playwright/test');
 
-const BASE_URL = 'http://localhost:80';
+const BASE_URL = 'http://localhost';
 
 async function logPageState(page, message) {
     console.log(`\n--- ${message} ---`);
@@ -152,4 +152,11 @@ test('update user profile', async ({ page }) => {
     await page.fill('input[id="username"]', randomUsername);
     await page.fill('input[id="email"]', randomEmail);
     await page.click('button:has-text("Sauvegarder")');
+
+    await page.waitForTimeout(2000);
+
+    await logPageState(page, 'After profile update');
+
+    const newUsername = await page.$(`text=${randomUsername}`);
+    expect(newUsername, 'Le nouveau usernmae n\'a pas été trouvé').toBeTruthy();
 });

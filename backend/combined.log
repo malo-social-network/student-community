@@ -5,3 +5,7 @@ info: User logged in: michel@test.com
 info: User logged in: michel@test.com
 info: User logged in: michel@test.com
 info: User logged in: michel@test.com
+info: Login error: secretOrPrivateKey must have a value
+info: Login error: secretOrPrivateKey must have a value
+info: Login error: secretOrPrivateKey must have a value
+info: Login error: secretOrPrivateKey must have a value
