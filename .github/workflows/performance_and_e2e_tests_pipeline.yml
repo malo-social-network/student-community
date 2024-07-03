@@ -42,6 +42,28 @@ jobs:
           cd backend
           npm ci
 
+      - name: Install Frontend Dependencies
+        run: |
+          cd frontend
+          npm ci 
+
+      - name: Start Backend
+        run: |
+          cd backend
+          nohup npm start > backend.log 2>&1 &
+          echo $! > ../backend.pid
+
+      - name: Start Frontend
+        run: |
+          cd frontend
+          nohup npm start > frontend.log 2>&1 &
+          echo $! > ../frontend.pid
+
+      - name: Wait for services to be ready
+        run: |
+          ./wait-for-it.sh localhost:5000 -t 60
+          ./wait-for-it.sh localhost:3000 -t 60
+
       - name: Run Backend Unit Tests
         run: |
           cd backend
@@ -52,28 +74,6 @@ jobs:
           DB_PASSWORD: root_password
           DB_NAME: student_community
           JWT_SECRET: your_jwt_secret
-
-      - name: Install Frontend Dependencies
-        run: |
-          cd frontend
-          npm ci
-
-      - name: Start Backend
-        run: |
-          cd backend
-          npm start &
-          echo $! > backend.pid
-
-      - name: Start Frontend
-        run: |
-          cd frontend
-          npm start &
-          echo $! > frontend.pid
-
-      - name: Wait for services to be ready
-        run: |
-          ./wait-for-it.sh localhost:5000 -t 60
-          ./wait-for-it.sh localhost:3000 -t 60
 
       - name: Install Playwright Browsers
         run: |
@@ -88,12 +88,6 @@ jobs:
           BASE_URL: http://localhost:3000
           JWT_SECRET: 'your_secret_key'
 
-      - name: Stop services
-        if: always()
-        run: |
-          kill $(cat backend.pid)
-          kill $(cat frontend.pid)
-
       - name: Install k6
         run: |
           sudo apt-get update
@@ -106,3 +100,10 @@ jobs:
       - name: Run Performance Tests
         run: |
           k6 run performance/test.js
+
+      - name: Stop services
+        if: always()
+        run: |
+          if [ -f backend.pid ]; then kill $(cat backend.pid) || true; fi
+          if [ -f frontend.pid ]; then kill $(cat frontend.pid) || true; fi
+
