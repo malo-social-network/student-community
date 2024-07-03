@@ -71,3 +71,9 @@ jobs:
         run: |
           cd frontend
           BASE_URL=http://localhost:3000 npm run test:e2e
+
+      - name: Run Frontend perf & unitaire Tests
+        run: |
+          cd frontend
+          npm run test
+
