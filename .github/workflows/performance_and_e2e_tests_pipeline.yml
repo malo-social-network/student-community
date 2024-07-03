@@ -34,16 +34,45 @@ jobs:
           sudo systemctl start mysql.service
           sudo systemctl status mysql.service
 
+      - name: Check MySQL user
+        run: |
+          sudo mysql -u root -proot_password -e "SELECT User, Host, plugin FROM mysql.user;"
+
+      - name: Create database if not exists
+        run: |
+          sudo mysql -u root -proot_password -e "CREATE DATABASE IF NOT EXISTS student_community;"
+
       - name: Set up Database Schema
         run: |
           echo "Initializing database schema..."
-          mysql -h 127.0.0.1 -u root -proot_password student_community < backend/init_db.sql
+          sudo mysql -u root -proot_password student_community < backend/init_db.sql
           echo "Database schema initialized"
 
-      - name: Check MySQL Status
+      - name: Check Database Content
         run: |
-          sudo systemctl status mysql.service
-          sudo mysql -h 127.0.0.1 -u root -root_password -e "SHOW DATABASES;"
+          echo "Checking database content..."
+          sudo mysql -u root -proot_password -e "USE student_community; SHOW TABLES;"
+
+      - name: Start Backend
+        env:
+          DB_HOST: 127.0.0.1
+          DB_USER: root
+          DB_PASSWORD: root_password
+          DB_NAME: student_community
+        run: |
+          cd backend
+          echo "Starting backend..."
+          npm start &
+          echo $! > ../backend.pid
+          sleep 10
+          if ps -p $(cat ../backend.pid) > /dev/null; then
+            echo "Backend started successfully"
+            cat backend.log
+          else
+            echo "Backend failed to start"
+            cat backend.log
+            exit 1
+          fi
 
       - name: Set up Node.js
         uses: actions/setup-node@v2
@@ -59,21 +88,6 @@ jobs:
         run: |
           cd frontend
           npm ci 
-
-      - name: Start Backend
-        run: |
-          cd backend
-          echo "Starting backend..."
-          npm start &
-          echo $! > ../backend.pid
-          sleep 10
-          if ps -p $(cat ../backend.pid) > /dev/null; then
-            echo "Backend started successfully"
-          else
-            echo "Backend failed to start"
-            cat backend.log
-            exit 1
-          fi
 
       - name: Start Frontend
         run: |
