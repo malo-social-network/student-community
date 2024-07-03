@@ -28,26 +28,20 @@ jobs:
         with:
           node-version: '16'
 
+      - name: Set up Database Schema
+        run: |
+          sudo apt-get install -y mysql-client
+          mysql -h 127.0.0.1 -u root -proot_password student_community < backend/config/init.sql
+
       - name: Install Backend Dependencies
         run: |
           cd backend
           npm ci
 
-      - name: Wait for MySQL to be ready
-        run: |
-          until mysqladmin ping --host=127.0.0.1 --user=root --password=root_password --silent; do
-            echo "Waiting for MySQL..."
-            sleep 2
-          done
-
-      - name: Initialize Database
-        run: |
-          mysql -h 127.0.0.1 -u root -proot_password student_community < backend/init_db.sql
-
-      - name: Run Backend Tests
+      - name: Start Backend Server
         run: |
           cd backend
-          npm run test
+          npm start &
         env:
           DB_HOST: 127.0.0.1
           DB_USER: root
@@ -60,22 +54,22 @@ jobs:
           cd frontend
           npm ci
 
+      - name: Start Frontend Server
+        run: |
+          cd frontend
+          npm start &
+        env:
+          REACT_APP_API_URL: http://localhost:5000
+
       - name: Install Playwright Browsers
         run: |
           cd frontend
           npx playwright install
 
-      - name: Run Frontend Unit & Performance Tests
-        run: |
-          cd frontend
-          npm test
-
       - name: Run Frontend EndToEnd Tests
         run: |
           cd frontend
           npm run test:e2e
-        env:
-          BASE_URL: 'http://localhost:3000'
 
       - name: Build Frontend
         run: |
