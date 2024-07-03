@@ -109,6 +109,10 @@ jobs:
           timeout 120s bash -c 'until nc -z localhost 3000; do echo "Waiting for frontend..."; sleep 5; done' || (echo "Frontend failed to start" && exit 1)
           echo "Frontend is ready!"
 
+      - name: Check MySQL Connection
+        run: |
+          mysql -h 127.0.0.1 -P 3306 -u root -p${{ secrets.DB_PASSWORD }} -e "SHOW DATABASES;"
+
       - name: Run Backend Unit Tests
         run: |
           cd backend
@@ -116,7 +120,7 @@ jobs:
         env:
           DB_HOST: 127.0.0.1
           DB_USER: root
-          DB_PASSWORD: new_root_password
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
           DB_NAME: student_community
           JWT_SECRET: your_jwt_secret
 
