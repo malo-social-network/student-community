@@ -5,7 +5,7 @@ const faker = require('faker');
 const dbConfig = {
     host: process.env.DB_HOST || 'localhost',
     user: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD || 'root_password',
+    password: process.env.DB_PASSWORD || 'root',
     database: process.env.DB_NAME || 'student_community',
 };
 
@@ -59,12 +59,18 @@ const createTables = async () => {
 const createFakeData = async () => {
     const pool = getPool();
 
-    const michelPassword = await bcrypt.hash('test', 10);
-    await pool.query(
-        'INSERT INTO users (username, email, password) VALUES (?, ?, ?)',
-        ['michel', 'michel@test.com', michelPassword]
-    );
-    console.log('Utilisateur Michel ajouté avec succès');
+    // Check if user 'michel' already exists
+    const [existingUsers] = await pool.query('SELECT * FROM users WHERE username = ?', ['michel']);
+    if (existingUsers.length === 0) {
+        const michelPassword = await bcrypt.hash('test', 10);
+        await pool.query(
+            'INSERT INTO users (username, email, password) VALUES (?, ?, ?)',
+            ['michel', 'michel@test.com', michelPassword]
+        );
+        console.log('Utilisateur Michel ajouté avec succès');
+    } else {
+        console.log('Utilisateur Michel existe déjà');
+    }
 
     for (let i = 0; i < 9; i++) {
         const username = faker.internet.userName();
@@ -109,6 +115,7 @@ const createFakeData = async () => {
         }
     }
 };
+
 
 const initializeDatabase = async () => {
     try {
