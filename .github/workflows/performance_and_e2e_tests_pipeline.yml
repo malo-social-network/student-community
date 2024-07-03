@@ -30,7 +30,16 @@ jobs:
         run: sudo apt-get install -y mysql-client
 
       - name: Set up Database Schema
-        run: mysql -h 127.0.0.1 -u root -proot_password student_community < backend/init_db.sql
+        run: |
+            echo "Initializing database schema..."
+            mysql -h 127.0.0.1 -u root -proot_password student_community < backend/init_db.sql
+          echo "Database schema finish"
+
+      - name: Check MySQL Status
+        run: |
+          sudo systemctl status mysql.service
+          mysql -h 127.0.0.1 -u root -proot_password -e "SHOW DATABASES;"
+          
 
       - name: Set up Node.js
         uses: actions/setup-node@v2
@@ -48,6 +57,11 @@ jobs:
           npm ci 
 
       - name: Start Backend
+        env:
+          DB_HOST: 127.0.0.1
+          DB_USER: root
+          DB_PASSWORD: root_password
+          DB_NAME: student_community
         run: |
           cd backend
           echo "Starting backend..."
