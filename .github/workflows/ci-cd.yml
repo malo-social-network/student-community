@@ -31,7 +31,7 @@ jobs:
       - name: Set up Database Schema
         run: |
           sudo apt-get install -y mysql-client
-          mysql -h 127.0.0.1 -u root -proot_password student_community < backend/config/init.sql
+          mysql -h 127.0.0.1 -u root -proot_password student_community < backend/init.sql
 
       - name: Install Backend Dependencies
         run: |
