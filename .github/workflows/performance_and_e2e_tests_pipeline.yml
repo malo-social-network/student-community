@@ -50,8 +50,13 @@ jobs:
       - name: Start Backend
         run: |
           cd backend
+          echo "Starting backend..."
           nohup npm start > backend.log 2>&1 &
           echo $! > ../backend.pid
+          echo "Backend started with PID $(cat ../backend.pid)"
+          sleep 10
+          echo "Backend log:"
+          cat backend.log
 
       - name: Start Frontend
         run: |
@@ -66,13 +71,13 @@ jobs:
 
       - name: Wait for services to be ready
         run: |
-          ./wait-for-it.sh localhost:5000 -t 60
-          ./wait-for-it.sh localhost:3000 -t 60
+          echo "Waiting for backend to start..."
+          timeout 120s bash -c 'until nc -z localhost 5000; do echo "Waiting for backend..."; sleep 5; done'
+          echo "Backend is ready!"
 
-#      - name: Wait for services to be ready
-#        run: |
-#          timeout 60s bash -c 'while ! nc -z localhost 5000; do sleep 1; done'
-#          timeout 60s bash -c 'while ! nc -z localhost 3000; do sleep 1; done'
+          echo "Waiting for frontend to start..."
+          timeout 120s bash -c 'until nc -z localhost 3000; do echo "Waiting for frontend..."; sleep 5; done'
+          echo "Frontend is ready!"
 
       - name: Run Backend Unit Tests
         run: |
