@@ -22,6 +22,12 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
+      - name: Install MySQL Client
+        run: sudo apt-get install -y mysql-client
+
+      - name: Set up Database Schema
+        run: mysql -h 127.0.0.1 -u root -proot_password student_community < backend/init_db.sql
+
       - name: Set up Node.js
         uses: actions/setup-node@v2
         with:
