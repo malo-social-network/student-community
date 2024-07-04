@@ -1,7 +1,7 @@
 // global-setup.js
 const { chromium } = require('@playwright/test');
 const { faker } = require('@faker-js/faker');
-const { getPool } = require('./database');
+const { getPool } = require('../../backend/config/database');
 
 async function globalSetup() {
     console.log('Starting global setup');

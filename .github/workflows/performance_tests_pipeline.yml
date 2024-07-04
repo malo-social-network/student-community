@@ -1,4 +1,4 @@
-name: Performance and E2E Tests Pipeline
+name: Performance Tests Pipeline
 
 on:
   workflow_dispatch:
@@ -123,23 +123,6 @@ jobs:
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
           DB_NAME: student_community
           JWT_SECRET: your_jwt_secret
-
-      - name: Install Playwright Browsers
-        run: |
-          cd frontend
-          npx playwright install
-
-#      - name: Run Frontend E2E Tests
-#        run: |
-#          cd frontend
-#          npx playwright test
-#        env:
-#          BASE_URL: http://localhost:3000
-#          JWT_SECRET: 'your_jwt_secret'
-#          DB_HOST: 127.0.0.1
-#          DB_USER: root
-#          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-#          DB_NAME: student_community
 
       - name: Install k6
         run: |
