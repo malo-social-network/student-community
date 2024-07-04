@@ -2,7 +2,8 @@ const { test, expect } = require('@playwright/test');
 
 const testUser = {
     email: process.env.TEST_USER_EMAIL,
-    password: process.env.TEST_USER_PASSWORD
+    password: process.env.TEST_USER_PASSWORD,
+    username: process.env.TEST_USER_USERNAME
 };
 
 test.describe('Authentication', () => {
@@ -27,7 +28,6 @@ test.describe('Authentication', () => {
     });
 
     test('should redirect to home page and show logout button after login', async ({ page }) => {
-        const testUser = getTestUser();
         await page.goto('/login');
         await page.fill('input[placeholder="Email"]', testUser.email);
         await page.fill('input[placeholder="Mot de passe"]', testUser.password);

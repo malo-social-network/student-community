@@ -17,7 +17,6 @@ test.describe('User Profile', () => {
     });
 
     test('should display user profile information', async ({ page }) => {
-        const testUser = getTestUser();
         await page.goto('/profile');
 
         await expect(page.locator('text=' + testUser.username)).toBeVisible();
