@@ -1,7 +1,4 @@
-const fs = require('fs');
-const path = require('path');
 const { chromium } = require('@playwright/test');
-const { faker } = require('@faker-js/faker');
 
 async function globalSetup() {
     console.log('Starting global setup');
@@ -12,9 +9,9 @@ async function globalSetup() {
         console.log('Navigating to register page');
         await page.goto('http://localhost:3000/register');
 
-        const username = faker.internet.userName();
-        const email = faker.internet.email();
-        const password = faker.internet.password();
+        const username = process.env.TEST_USER_USERNAME;
+        const email = process.env.TEST_USER_EMAIL;
+        const password = process.env.TEST_USER_PASSWORD;
 
         console.log('Filling registration form');
         await page.fill('input[placeholder="Nom d\'utilisateur"]', username);
@@ -34,9 +31,6 @@ async function globalSetup() {
         if (!response.ok()) {
             throw new Error(`Registration failed: ${responseBody.error}`);
         }
-
-        const userData = { username, email, password };
-        fs.writeFileSync(path.join(__dirname, 'testUser.json'), JSON.stringify(userData));
 
         console.log('Test user created successfully');
     } catch (error) {

@@ -4,7 +4,12 @@ const { faker } = require('@faker-js/faker');
 
 test.describe('User Profile', () => {
     test.beforeEach(async ({ page }) => {
-        const testUser = getTestUser();
+        const testUser = {
+            username: process.env.TEST_USER_USERNAME,
+            email: process.env.TEST_USER_EMAIL,
+            password: process.env.TEST_USER_PASSWORD
+        };
+
         await page.goto('/login');
         await page.fill('input[placeholder="Email"]', testUser.email);
         await page.fill('input[placeholder="Mot de passe"]', testUser.password);
