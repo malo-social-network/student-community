@@ -160,9 +160,10 @@ const initializeDatabase = async () => {
         const dbExists = await checkDatabaseExists();
         if (!dbExists) {
             await createDatabase();
-            await createTables();
-            await createFakeData();
         }
+
+        await createTables();
+        await createFakeData();
 
         console.log('Database initialization completed successfully');
     } catch (error) {
@@ -170,6 +171,22 @@ const initializeDatabase = async () => {
         throw error;
     }
 };
+
+// Fonction principale pour l'exécution en tant que script
+const main = async () => {
+    try {
+        await initializeDatabase();
+        process.exit(0);
+    } catch (error) {
+        console.error('Database initialization failed:', error);
+        process.exit(1);
+    }
+};
+
+// Exécuter la fonction principale si le script est appelé directement
+if (require.main === module) {
+    main();
+}
 
 module.exports = {
     initializeDatabase,

@@ -38,6 +38,16 @@ jobs:
           cd frontend
           npm ci
 
+      - name: Initialize Database
+        run: |
+          cd backend
+          node database.js
+        env:
+          DB_HOST: localhost
+          DB_USER: root
+          DB_PASSWORD: root_password
+          DB_NAME: student_community
+
       - name: Install Playwright
         run: |
           cd frontend
