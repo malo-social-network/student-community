@@ -51,12 +51,6 @@ jobs:
         env:
           REACT_APP_API_URL: http://localhost:5000/api
 
-      - name: Wait for servers to start
-        run: |
-          sleep 30s
-          curl http://localhost:3000
-          curl http://localhost:5000/api
-
       - name: Run Playwright tests
         run: |
           cd frontend
