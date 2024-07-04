@@ -1,7 +1,7 @@
-// global-setup.js
+const fs = require('fs');
+const path = require('path');
 const { chromium } = require('@playwright/test');
 const { faker } = require('@faker-js/faker');
-const { getPool } = require('../../backend/config/database');
 
 async function globalSetup() {
     console.log('Starting global setup');
@@ -35,11 +35,8 @@ async function globalSetup() {
             throw new Error(`Registration failed: ${responseBody.error}`);
         }
 
-        const pool = getPool();
-        await pool.query(
-            'INSERT INTO users (username, email, password) VALUES (?, ?, ?)',
-            [username, email, password]
-        );
+        const userData = { username, email, password };
+        fs.writeFileSync(path.join(__dirname, 'testUser.json'), JSON.stringify(userData));
 
         console.log('Test user created successfully');
     } catch (error) {
