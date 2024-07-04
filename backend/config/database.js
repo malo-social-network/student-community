@@ -172,7 +172,6 @@ const initializeDatabase = async () => {
     }
 };
 
-// Fonction principale pour l'exécution en tant que script
 const main = async () => {
     try {
         await initializeDatabase();
@@ -183,7 +182,6 @@ const main = async () => {
     }
 };
 
-// Exécuter la fonction principale si le script est appelé directement
 if (require.main === module) {
     main();
 }

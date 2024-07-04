@@ -37,7 +37,7 @@ async function globalSetup() {
 
         const pool = getPool();
         await pool.query(
-            'INSERT INTO test_users (username, email, password) VALUES (?, ?, ?)',
+            'INSERT INTO users (username, email, password) VALUES (?, ?, ?)',
             [username, email, password]
         );
 
