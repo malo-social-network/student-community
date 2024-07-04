@@ -1,4 +1,4 @@
-name: Playwright Tests
+name: EndToEnd Tests
 
 on:
   push:
@@ -9,6 +9,16 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root_password
+          MYSQL_DATABASE: student_community
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
 
     steps:
       - uses: actions/checkout@v2
@@ -44,6 +54,10 @@ jobs:
           DB_NAME: student_community
           JWT_SECRET: your_jwt_secret
 
+      - name: Wait for Backend Server
+        run: |
+          timeout 300 bash -c 'while [[ "$(curl -s -o /dev/null -w ''%{http_code}'' localhost:5000/api/health)" != "200" ]]; do sleep 5; done' || false
+
       - name: Start Frontend Server
         run: |
           cd frontend
@@ -51,12 +65,17 @@ jobs:
         env:
           REACT_APP_API_URL: http://localhost:5000/api
 
+      - name: Wait for Frontend Server
+        run: |
+          timeout 300 bash -c 'while [[ "$(curl -s -o /dev/null -w ''%{http_code}'' localhost:3000)" != "200" ]]; do sleep 5; done' || false
+
       - name: Run Playwright tests
         run: |
           cd frontend
           npx playwright test
         env:
           CI: true
+          PLAYWRIGHT_TEST_BASE_URL: http://localhost:3000
 
       - uses: actions/upload-artifact@v2
         if: always()
