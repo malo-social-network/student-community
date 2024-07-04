@@ -1,5 +1,7 @@
+// global-setup.js
 const { chromium } = require('@playwright/test');
 const { faker } = require('@faker-js/faker');
+const { getPool } = require('./database');
 
 async function globalSetup() {
     console.log('Starting global setup');
@@ -10,10 +12,14 @@ async function globalSetup() {
         console.log('Navigating to register page');
         await page.goto('http://localhost:3000/register');
 
+        const username = faker.internet.userName();
+        const email = faker.internet.email();
+        const password = faker.internet.password();
+
         console.log('Filling registration form');
-        await page.fill('input[placeholder="Nom d\'utilisateur"]', faker.internet.userName());
-        await page.fill('input[placeholder="Email"]', faker.internet.email());
-        await page.fill('input[placeholder="Mot de passe"]', faker.internet.password());
+        await page.fill('input[placeholder="Nom d\'utilisateur"]', username);
+        await page.fill('input[placeholder="Email"]', email);
+        await page.fill('input[placeholder="Mot de passe"]', password);
 
         console.log('Submitting registration form');
         const [response] = await Promise.all([
@@ -28,6 +34,12 @@ async function globalSetup() {
         if (!response.ok()) {
             throw new Error(`Registration failed: ${responseBody.error}`);
         }
+
+        const pool = getPool();
+        await pool.query(
+            'INSERT INTO test_users (username, email, password) VALUES (?, ?, ?)',
+            [username, email, password]
+        );
 
         console.log('Test user created successfully');
     } catch (error) {
