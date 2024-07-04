@@ -23,6 +23,23 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
+      - name: Install MySQL Client
+        run: sudo apt-get install -y mysql-client
+
+      - name: Wait for MySQL to be ready
+        run: |
+          timeout 60s bash -c 'until mysqladmin ping -h"127.0.0.1" -P"3306" --silent; do sleep 1; done'
+
+      - name: Check MySQL user
+        run: |
+          mysql -h 127.0.0.1 -P 3306 -u root -p${{ secrets.DB_PASSWORD }} -e "SELECT User, Host, plugin FROM mysql.user;"
+
+      - name: Set up Database Schema
+        run: |
+          echo "Initializing database schema..."
+          mysql -h 127.0.0.1 -P 3306 -u root -p${{ secrets.DB_PASSWORD }} student_community < backend/init_db.sql
+          echo "Database schema initialized"
+
       - name: Use Node.js
         uses: actions/setup-node@v2
         with:
@@ -38,16 +55,6 @@ jobs:
           cd frontend
           npm ci
 
-      - name: Initialize Database
-        run: |
-          cd backend
-          node ./config/database.js
-        env:
-          DB_HOST: localhost
-          DB_USER: root
-          DB_PASSWORD: root_password
-          DB_NAME: student_community
-
       - name: Install Playwright
         run: |
           cd frontend
@@ -60,8 +67,8 @@ jobs:
         env:
           DB_HOST: localhost
           DB_USER: root
-          DB_PASSWORD: root_password
-          DB_NAME: student_community
+          MYSQL_ROOT_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          MYSQL_DATABASE: student_community
           JWT_SECRET: your_jwt_secret
 
       - name: Wait for Backend Server
@@ -90,7 +97,7 @@ jobs:
           TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL }}
           TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          JWT_SECRET: your_jwt_secret
 
       - uses: actions/upload-artifact@v2
         if: always()
