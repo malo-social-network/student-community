@@ -1,14 +1,14 @@
 const { test, expect } = require('@playwright/test');
 const { faker } = require('@faker-js/faker');
-const { testUser, getTestUser} = require('./testUser');
+
+const testUser = {
+    email: process.env.TEST_USER_EMAIL,
+    password: process.env.TEST_USER_PASSWORD,
+    username: process.env.TEST_USER_USERNAME
+};
 
 test.describe('Posts', () => {
     test.beforeEach(async ({ page }) => {
-        const testUser = {
-            username: process.env.TEST_USER_USERNAME,
-            email: process.env.TEST_USER_EMAIL,
-            password: process.env.TEST_USER_PASSWORD
-        };
         await page.goto('/login');
         await page.fill('input[placeholder="Email"]', testUser.email);
         await page.fill('input[placeholder="Mot de passe"]', testUser.password);

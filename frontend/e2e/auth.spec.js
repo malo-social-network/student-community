@@ -1,13 +1,12 @@
 const { test, expect } = require('@playwright/test');
-const { getTestUser } = require('./testUser');
+
+const testUser = {
+    email: process.env.TEST_USER_EMAIL,
+    password: process.env.TEST_USER_PASSWORD
+};
 
 test.describe('Authentication', () => {
     test('should successfully log in and receive a token', async ({ page }) => {
-        const testUser = {
-            username: process.env.TEST_USER_USERNAME,
-            email: process.env.TEST_USER_EMAIL,
-            password: process.env.TEST_USER_PASSWORD
-        };
         await page.goto('/login');
         await page.fill('input[placeholder="Email"]', testUser.email);
         await page.fill('input[placeholder="Mot de passe"]', testUser.password);
